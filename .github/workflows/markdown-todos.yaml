@@ -30,6 +30,6 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_SHA: ${{ github.sha }}
           GITHUB_TOKEN: ${{ secrets.PROJECT_AUTOMATION_TOKEN }}
-          GITHUB_PROJECT_SYNC: "true"
+          GITHUB_PROJECT_SYNC: "false"
         run: |
           python .github/scripts/markdown_todos_to_issues.py
