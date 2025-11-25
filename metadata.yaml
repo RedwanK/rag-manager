@@ -1,0 +1,20 @@
+# Metadata template for markdown-pdf
+# Remplissez les champs souhaités puis utilisez ce fichier avec `--meta`.
+# Les champs optionnels peuvent être supprimés.
+
+title: Nom du document
+company: Société
+author: Redwan Kara
+contact: redwankara@gmail.com
+address: 12 rue de la documentation, 75000 Paris
+logo_path: assets/logo.png
+
+# Couleurs et polices (optionnels)
+title_color: "#870160"
+title_font: "TeX Gyre Heros"
+body_font: "TeX Gyre Heros"
+
+# Informations additionnelles affichées sur la couverture
+#extra:
+#  subtitle: Sous-titre optionnel
+#  cover_notes: Notes supplémentaires sur la couverture
