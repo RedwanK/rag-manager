@@ -1,10 +1,10 @@
 # Lot 1 Tasks
 
 ## User Management (Symfony Security)
-- [ ] Implement `User` entity with email as user identifier, password hash, roles array, status, timestamps; expose getters for `UserInterface`/`PasswordAuthenticatedUserInterface`. #auth #security
-- [ ] Configure `security.yaml` (password hashers, user provider, firewall, access control) aligned with Symfony Security defaults. #auth #config
+- [x] Implement `User` entity with email as user identifier, password hash, roles array, status, timestamps; expose getters for `UserInterface`/`PasswordAuthenticatedUserInterface`. #auth #security
+- [x] Configure `security.yaml` (password hashers, user provider, firewall, access control) aligned with Symfony Security defaults. #auth #config
 - [ ] Create Admin-only CRUD for users (listing, create, edit roles/status, reset password). #auth #ui #admin
-- [ ] Seed an initial Admin user via fixture or console command for first access. #auth #ops
+- [x] Seed an initial Admin user via fixture or console command for first access. #auth #ops
 
 ## GitHub Sync and Storage
 - [ ] Add `RepositoryConfig` entity (repo name, owner, url, default branch, encrypted token, last sync status/time/message). #github-sync #db
