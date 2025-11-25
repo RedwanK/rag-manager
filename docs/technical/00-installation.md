@@ -4,6 +4,7 @@
 
 - Install php >=8.2
 - Install composer & symfony-cli (not mandatory but recommanded)
+- Install Yarn or Node (>=v18) for assets management
 
 Then check symfony requirements (especially php extensions and stuff like this) : `symfony check:requirements`
 
