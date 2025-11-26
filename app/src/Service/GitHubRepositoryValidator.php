@@ -2,17 +2,21 @@
 
 namespace App\Service;
 
+use App\Service\API\GitHubApiRouteResolver;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class GitHubRepositoryValidator
 {
-    public function __construct(private readonly HttpClientInterface $client)
+    public function __construct(private readonly HttpClientInterface $client, protected GitHubApiRouteResolver $routeResolver)
     {
     }
 
     public function assertRepositoryIsReachable(string $owner, string $name, string $token): array
     {
-        $response = $this->client->request('GET', sprintf('https://api.github.com/repos/%s/%s', $owner, $name), [
+        $route = $this->routeResolver->resolve('repo', [$owner, $name]);
+
+        // TODO : Handle properly and dynamically headers and bodies
+        $response = $this->client->request($route['method'], $route['route'], [
             'headers' => [
                 'Authorization' => 'Bearer ' . $token,
                 'Accept' => 'application/vnd.github+json',

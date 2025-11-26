@@ -15,15 +15,15 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class RepositoryController extends AbstractController
 {
     public function __construct(
-        private readonly RepositoryConfigRepository $configs,
-        private readonly DocumentNodeRepository $nodes,
-        private readonly SyncLogRepository $logs,
+        private readonly RepositoryConfigRepository $repositoryConfigRepository,
+        private readonly DocumentNodeRepository $documentNodeRepository,
+        private readonly SyncLogRepository $syncLogRepository,
         private readonly EntityManagerInterface $em,
     ) {
     }
@@ -32,7 +32,9 @@ class RepositoryController extends AbstractController
     #[IsGranted('ROLE_ADMIN')]
     public function configure(Request $request, GitHubRepositoryValidator $validator, TokenCipher $cipher): Response
     {
-        $config = $this->configs->findOneBy([]) ?? new RepositoryConfig();
+        // this is temporary because we want to work with only 1 repository config at first. 
+        // TODO : update this to handle multi repository (maybe in Lot 3)
+        $config = $this->repositoryConfigRepository->findOneBy([]) ?? new RepositoryConfig();
         $form = $this->createForm(RepositoryConfigType::class, $config);
         $form->handleRequest($request);
 
@@ -40,6 +42,7 @@ class RepositoryController extends AbstractController
             $data = $form->getData();
             $validator->assertRepositoryIsReachable($data->getOwner(), $data->getName(), $data->getToken());
             $data->setEncryptedToken($cipher->encrypt($data->getToken()));
+
             $this->em->persist($data);
             $this->em->flush();
 
@@ -58,13 +61,15 @@ class RepositoryController extends AbstractController
     #[Route('/repository/tree', name: 'repository_tree')]
     public function tree(): Response
     {
-        $config = $this->configs->findOneBy([]);
+        // this is temporary because we want to work with only 1 repository config at first. 
+        // TODO : update this to handle multi repository (maybe in Lot 3)
+        $config = $this->repositoryConfigRepository->findOneBy([]);
         if (!$config) {
             return $this->render('repository/empty.html.twig');
         }
 
-        $nodes = $this->nodes->findByRepository($config);
-        $logs = $this->logs->findBy(['repositoryConfig' => $config], ['startedAt' => 'DESC'], 10);
+        $nodes = $this->documentNodeRepository->findByRepository($config);
+        $logs = $this->syncLogRepository->findBy(['repositoryConfig' => $config], ['startedAt' => 'DESC'], 10);
 
         return $this->render('repository/tree.html.twig', [
             'config' => $config,
@@ -74,10 +79,10 @@ class RepositoryController extends AbstractController
     }
 
     #[Route('/repository/sync', name: 'repository_sync', methods: ['POST'])]
-    #[IsGranted('ROLE_REVIEWER')]
+    #[IsGranted('ROLE_ADMIN')]
     public function sync(GitHubSyncService $syncService): RedirectResponse
     {
-        $config = $this->configs->findOneBy([]);
+        $config = $this->repositoryConfigRepository->findOneBy([]);
         if (!$config) {
             $this->addFlash('error', 'Configure a repository first.');
             return $this->redirectToRoute('repository_tree');

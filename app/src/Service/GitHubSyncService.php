@@ -6,19 +6,25 @@ use App\Entity\DocumentNode;
 use App\Entity\RepositoryConfig;
 use App\Entity\SyncLog;
 use App\Repository\DocumentNodeRepository;
-use App\Repository\SyncLogRepository;
+use App\Service\API\GitHubApiRouteResolver;
 use App\Service\TokenCipher;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class GitHubSyncService
 {
+    const SYNC_STATUS_RUNNING = "running";
+    const SYNC_STATUS_SYNCED = "synced";
+    const SYNC_STATUS_SUCCESS = "success";
+    const SYNC_STATUS_FAILED = "failed";
+
     public function __construct(
-        private readonly HttpClientInterface $client,
-        private readonly DocumentNodeRepository $nodes,
-        private readonly SyncLogRepository $logs,
-        private readonly EntityManagerInterface $em,
-        private readonly TokenCipher $cipher,
+        protected readonly HttpClientInterface $client,
+        protected readonly DocumentNodeRepository $documentNodeRepository,
+        protected readonly GitHubApiRouteResolver $routeResolver,
+        protected readonly EntityManagerInterface $em,
+        protected readonly TokenCipher $cipher,
+        protected readonly string $githubDefaultBranch
     ) {
     }
 
@@ -27,7 +33,7 @@ class GitHubSyncService
         $log = (new SyncLog())
             ->setRepositoryConfig($config)
             ->setTriggeredBy($triggeredBy)
-            ->setStatus('running');
+            ->setStatus(self::SYNC_STATUS_RUNNING);
         $this->em->persist($log);
         $this->em->flush();
 
@@ -36,7 +42,7 @@ class GitHubSyncService
             $config->setDefaultBranch($metadata['default_branch'] ?? $config->getDefaultBranch());
             $tree = $this->fetchTree($config);
 
-            $this->nodes->deleteForRepository($config);
+            $this->documentNodeRepository->deleteForRepository($config);
 
             foreach ($tree as $item) {
                 $node = (new DocumentNode())
@@ -45,21 +51,21 @@ class GitHubSyncService
                     ->setType($item['type'])
                     ->setSize($item['size'] ?? null)
                     ->setLastSyncedAt(new \DateTimeImmutable())
-                    ->setLastSyncStatus('synced');
+                    ->setLastSyncStatus(self::SYNC_STATUS_SYNCED);
 
                 $this->em->persist($node);
             }
 
             $config->setLastSyncAt(new \DateTimeImmutable())
-                ->setLastSyncStatus('success')
+                ->setLastSyncStatus(self::SYNC_STATUS_SUCCESS)
                 ->setLastSyncMessage(null);
 
-            $log->setStatus('success');
+            $log->setStatus(self::SYNC_STATUS_SUCCESS);
         } catch (\Throwable $error) {
             $config->setLastSyncAt(new \DateTimeImmutable())
-                ->setLastSyncStatus('failed')
+                ->setLastSyncStatus(self::SYNC_STATUS_FAILED)
                 ->setLastSyncMessage($error->getMessage());
-            $log->setStatus('failed')->setMessage($error->getMessage());
+            $log->setStatus(self::SYNC_STATUS_FAILED)->setMessage($error->getMessage());
         } finally {
             $log->setFinishedAt(new \DateTimeImmutable());
             $this->em->flush();
@@ -70,7 +76,9 @@ class GitHubSyncService
 
     private function fetchRepositoryMetadata(RepositoryConfig $config): array
     {
-        $response = $this->client->request('GET', sprintf('https://api.github.com/repos/%s', $config->getRepositorySlug()), [
+        $route = $this->routeResolver->resolve("repoMetadata", [$config->getRepositorySlug()]);
+
+        $response = $this->client->request($route['method'], $route['route'], [
             'headers' => $this->headers($config),
         ]);
 
@@ -79,10 +87,13 @@ class GitHubSyncService
 
     private function fetchTree(RepositoryConfig $config): array
     {
-        $branch = $config->getDefaultBranch() ?: 'main';
-        $response = $this->client->request('GET', sprintf('https://api.github.com/repos/%s/git/trees/%s', $config->getRepositorySlug(), $branch), [
+        $branch = $config->getDefaultBranch() ?: $this->githubDefaultBranch;
+
+        $route = $this->routeResolver->resolve('repoTree', [$config->getRepositorySlug(), $branch]);
+
+        $response = $this->client->request($route['method'], $route['route'], [
             'query' => ['recursive' => 1],
-            'headers' => $this->headers($config),
+            'headers' => $this->headers($config)
         ]);
 
         $data = $response->toArray();

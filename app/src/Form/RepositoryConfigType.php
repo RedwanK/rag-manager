@@ -11,6 +11,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class RepositoryConfigType extends AbstractType
 {
+    public function __construct(protected string $githubDefaultBranch)
+    {
+    }
+
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
@@ -22,6 +26,7 @@ class RepositoryConfigType extends AbstractType
             ->add('defaultBranch', TextType::class, [
                 'required' => false,
                 'help' => 'Optional override when the repository uses a non-default branch.',
+                'empty_data' => $this->githubDefaultBranch
             ])
             ->add('save', SubmitType::class, ['label' => 'Save configuration']);
     }
