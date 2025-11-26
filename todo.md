@@ -7,11 +7,11 @@
 - [x] Seed an initial Admin user via fixture or console command for first access. #auth #ops
 
 ## GitHub Sync and Storage
-- [ ] Add `RepositoryConfig` entity (repo name, owner, url, default branch, encrypted token, last sync status/time/message). #github-sync #db
-- [ ] Service to validate repo connectivity/token scopes against GitHub API with clear error messages. #github-sync #backend
-- [ ] Manual sync job/command to fetch repository tree and persist `DocumentNode` cache. #github-sync #sync
-- [ ] Persist `SyncLog` entries tying sync runs to triggering user and status. #github-sync #observability
-- [ ] Redact tokens after save in UI and encrypt at rest in storage. #security #github-sync
+- [x] Add `RepositoryConfig` entity (repo name, owner, url, default branch, encrypted token, last sync status/time/message). #github-sync #db
+- [x] Service to validate repo connectivity/token scopes against GitHub API with clear error messages. #github-sync #backend
+- [x] Manual sync job/command to fetch repository tree and persist `DocumentNode` cache. #github-sync #sync
+- [x] Persist `SyncLog` entries tying sync runs to triggering user and status. #github-sync #observability
+- [x] Redact tokens after save in UI and encrypt at rest in storage. #security #github-sync
 
 ## UI
 - [ ] Tree view UI backed by cached `DocumentNode` data, showing path, size, last modified, last sync status/time. #ui #github-sync
