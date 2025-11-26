@@ -1,0 +1,70 @@
+{% extends 'layout/app.html.twig' %}
+
+{% block title %}{{ 'user.titles.index'|trans }}{% endblock %}
+
+{% block page_header %}
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+        <div>
+            <p class="text-muted mb-1">{{ 'user.subtitles.manage'|trans }}</p>
+            <h4 class="mb-0">{{ 'user.titles.index'|trans }}</h4>
+        </div>
+        <a class="btn btn-primary" href="{{ path('admin_user_new') }}">
+            {{ ux_icon('bx:user-plus') }}
+            <span class="ms-1">{{ 'user.actions.create'|trans }}</span>
+        </a>
+    </div>
+{% endblock %}
+
+{% block page_content %}
+    <div class="card">
+        <div class="card-header pb-0 d-flex justify-content-between align-items-center">
+            <div>
+                <h6 class="mb-1">{{ 'user.labels.overview'|trans }}</h6>
+                <p class="text-muted small mb-0">{{ 'user.labels.overview_help'|trans }}</p>
+            </div>
+            <span class="badge bg-label-secondary">{{ users|length }} {{ 'user.labels.count'|trans }}</span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>{{ 'user.fields.email'|trans }}</th>
+                            <th>{{ 'user.fields.status'|trans }}</th>
+                            <th>{{ 'user.fields.roles'|trans }}</th>
+                            <th class="text-end">{{ 'user.labels.actions'|trans }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for user in users %}
+                        <tr>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                {% set badge = user.status == 'active' ? 'success' : 'secondary' %}
+                                <span class="badge bg-label-{{ badge }} text-uppercase">{{ ('user.status.' ~ user.status)|trans }}</span>
+                            </td>
+                            <td>
+                                <div class="d-flex flex-wrap gap-1">
+                                    {% for role in user.roles %}
+                                        <span class="badge bg-label-primary">{{ ('user.roles.label.' ~ role)|trans }}</span>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group" role="group">
+                                    <a class="btn btn-outline-secondary btn-sm" href="{{ path('admin_user_edit', {id: user.id}) }}">{{ 'form.actions.edit'|trans }}</a>
+                                    <a class="btn btn-outline-primary btn-sm" href="{{ path('admin_user_reset_password', {id: user.id}) }}">{{ 'form.actions.reset_password'|trans }}</a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">{{ 'user.labels.empty'|trans }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}

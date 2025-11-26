@@ -18,17 +18,23 @@ class RepositoryConfigType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('owner', TextType::class)
-            ->add('name', TextType::class)
+            ->add('owner', TextType::class, [
+                'label' => 'repository.fields.owner',
+            ])
+            ->add('name', TextType::class, [
+                'label' => 'repository.fields.name',
+            ])
             ->add('token', TextType::class, [
-                'help' => 'Personal access token with repo and contents permissions. Stored encrypted.',
+                'label' => 'repository.fields.token',
+                'help' => 'repository.help.token',
             ])
             ->add('defaultBranch', TextType::class, [
                 'required' => false,
-                'help' => 'Optional override when the repository uses a non-default branch.',
+                'label' => 'repository.fields.default_branch',
+                'help' => 'repository.help.default_branch',
                 'empty_data' => $this->githubDefaultBranch
             ])
-            ->add('save', SubmitType::class, ['label' => 'Save configuration']);
+            ->add('save', SubmitType::class, ['label' => 'form.actions.save']);
     }
 
     public function configureOptions(OptionsResolver $resolver): void
