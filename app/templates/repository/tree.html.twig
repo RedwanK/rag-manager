@@ -13,12 +13,12 @@
         <div>{{ message }}</div>
     {% endfor %}
 
-    {% if is_granted('ROLE_REVIEWER') %}
+    {% if is_granted('ROLE_ADMIN') %}
         <form method="post" action="{{ path('repository_sync') }}">
             <button type="submit">Trigger sync</button>
         </form>
     {% else %}
-        <p>You need reviewer rights to trigger a sync.</p>
+        <p>You need admin rights to trigger a sync.</p>
     {% endif %}
 
     <table>

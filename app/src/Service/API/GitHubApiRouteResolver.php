@@ -40,10 +40,10 @@ class GitHubApiRouteResolver
             throw new Exception("Unknown route");
         }
 
-        $routeName = $this->githubApiBaseUrl . "/" . self::ROUTES[$routeName]['base'];
+        $finalRoute = $this->githubApiBaseUrl . "/" . self::ROUTES[$routeName]['base'];
 
         return [
-            "route" => sprintf($routeName, ...$params),
+            "route" => sprintf($finalRoute, ...$params),
             "method" => self::ROUTES[$routeName]["method"]
         ];
     }

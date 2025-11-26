@@ -36,20 +36,35 @@ class RepositoryController extends AbstractController
         // this is temporary because we want to work with only 1 repository config at first. 
         // TODO : update this to handle multi repository (maybe in Lot 3)
         $config = $this->repositoryConfigRepository->findOneBy([]) ?? new RepositoryConfig();
+        $token = $config->getToken();
+
         $form = $this->createForm(RepositoryConfigType::class, $config);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $data = $form->getData();
-            $validator->assertRepositoryIsReachable($data->getOwner(), $data->getName(), $data->getToken());
-            $data->setEncryptedToken($cipher->encrypt($data->getToken()));
+
+            if($token === $data->getToken()) {
+                $token = $cipher->decrypt($token);
+            } else {
+                $token = $data->getToken();
+            }
+
+            try {
+                $validator->assertRepositoryIsReachable($data->getOwner(), $data->getName(), $token);
+            } catch (\Exception $e) {
+                $this->addFlash('error', 'It seems there is a token issue here.');
+                return $this->redirectToRoute('repository_index');
+            }
+            
+            $data->setEncryptedToken($cipher->encrypt($token));
 
             $this->em->persist($data);
             $this->em->flush();
 
             $this->addFlash('success', 'Configuration saved. Tokens are redacted after persistence.');
 
-            return $this->redirectToRoute('repository_config');
+            return $this->redirectToRoute('repository_index');
         }
 
         return $this->render('repository/config.html.twig', [
