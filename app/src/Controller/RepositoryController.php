@@ -18,6 +18,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
+#[Route('/admin/repository', name: 'repository_')]
 class RepositoryController extends AbstractController
 {
     public function __construct(
@@ -28,9 +29,9 @@ class RepositoryController extends AbstractController
     ) {
     }
 
-    #[Route('/admin/repository', name: 'repository_config')]
+    #[Route('/', name: 'index')]
     #[IsGranted('ROLE_ADMIN')]
-    public function configure(Request $request, GitHubRepositoryValidator $validator, TokenCipher $cipher): Response
+    public function index(Request $request, GitHubRepositoryValidator $validator, TokenCipher $cipher): Response
     {
         // this is temporary because we want to work with only 1 repository config at first. 
         // TODO : update this to handle multi repository (maybe in Lot 3)
@@ -58,7 +59,7 @@ class RepositoryController extends AbstractController
         ]);
     }
 
-    #[Route('/repository/tree', name: 'repository_tree')]
+    #[Route('/tree', name: 'tree')]
     public function tree(): Response
     {
         // this is temporary because we want to work with only 1 repository config at first. 
@@ -78,8 +79,7 @@ class RepositoryController extends AbstractController
         ]);
     }
 
-    #[Route('/repository/sync', name: 'repository_sync', methods: ['POST'])]
-    #[IsGranted('ROLE_ADMIN')]
+    #[Route('/sync', name: 'sync', methods: ['POST'])]
     public function sync(GitHubSyncService $syncService): RedirectResponse
     {
         $config = $this->repositoryConfigRepository->findOneBy([]);
