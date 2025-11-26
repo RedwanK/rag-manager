@@ -9,11 +9,12 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 #[AsCommand(name: 'app:github:sync', description: 'Trigger a manual sync for a configured repository')]
 class RepositorySyncCommand extends Command
 {
-    public function __construct(private readonly RepositoryConfigRepository $configs, private readonly GitHubSyncService $sync)
+    public function __construct(private readonly RepositoryConfigRepository $repositoryConfigRepository, private readonly GitHubSyncService $githubSyncService)
     {
         parent::__construct();
     }
@@ -27,16 +28,18 @@ class RepositorySyncCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $configId = (int) $input->getArgument('configId');
-        $config = $this->configs->find($configId);
+        $config = $this->repositoryConfigRepository->find($configId);
+
+        $io = new SymfonyStyle($input, $output);
 
         if (null === $config) {
-            $output->writeln('<error>RepositoryConfig not found.</error>');
+            $io->error("RepositoryConfig not found.");
             return Command::FAILURE;
         }
 
-        $log = $this->sync->syncRepository($config, $input->getArgument('triggeredBy'));
+        $log = $this->githubSyncService->syncRepository($config, $input->getArgument('triggeredBy'));
 
-        $output->writeln(sprintf('Sync finished with status %s', $log->getStatus()));
+        $io->success(sprintf('Sync finished with status %s', $log->getStatus()));
 
         return Command::SUCCESS;
     }
