@@ -18,3 +18,7 @@
 - [ ] Authorized action to trigger sync from the UI (roles: Admin/Reviewer). #ui #auth #github-sync
 - [ ] Admin UI to configure repository settings and token updates. #ui #admin #github-sync
 - [ ] Enforce role-based visibility for Admin/Reviewer/Viewer across pages and actions. #ui #auth
+
+## Utils
+- [ ] Use Symfony translations instead of raw string in the application (php and twig files) #utils
+- [ ] Complete PHPDoc for each functions, class and related items # utils
