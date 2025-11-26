@@ -1,0 +1,24 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Repository configuration{% endblock %}
+
+{% block body %}
+    <h1>Repository configuration</h1>
+
+    {% for message in app.flashes('success') %}
+        <div>{{ message }}</div>
+    {% endfor %}
+
+    {{ form_start(form) }}
+        {{ form_row(form.owner) }}
+        {{ form_row(form.name) }}
+        {{ form_row(form.defaultBranch) }}
+        {{ form_row(form.token) }}
+        {{ form_row(form.save) }}
+    {{ form_end(form) }}
+
+    {% if config.id %}
+        <p>Token stored securely: {{ token_preview ?? '********' }}</p>
+        <p>Last sync: {{ config.lastSyncAt ? config.lastSyncAt|date('Y-m-d H:i') : 'never' }} ({{ config.lastSyncStatus ?? 'n/a' }})</p>
+    {% endif %}
+{% endblock %}
