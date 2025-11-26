@@ -1,5 +1,6 @@
-import { startStimulusApp } from '@symfony/stimulus-bundle';
+import { startStimulusApp } from '@symfony/stimulus-bridge';
 
-const app = startStimulusApp();
-// register any custom, 3rd party controllers here
-// app.register('some_controller_name', SomeImportedController);
+// Auto-register every controller in ./controllers and the UX bridge controllers.
+const app = startStimulusApp(require.context('./controllers', true, /\.js$/));
+
+export default app;

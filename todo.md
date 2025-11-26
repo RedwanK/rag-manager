@@ -14,9 +14,9 @@
 - [x] Redact tokens after save in UI and encrypt at rest in storage. #security #github-sync
 
 ## UI
-- [ ] Tree view UI backed by cached `DocumentNode` data, showing path, size, last modified, last sync status/time. #ui #github-sync
-- [ ] Authorized action to trigger sync from the UI (roles: Admin/Reviewer). #ui #auth #github-sync
-- [ ] Admin UI to configure repository settings and token updates. #ui #admin #github-sync
+- [x] Tree view UI backed by cached `DocumentNode` data, showing path, size, last modified, last sync status/time. #ui #github-sync
+- [x] Authorized action to trigger sync from the UI (roles: Admin/Reviewer). #ui #auth #github-sync
+- [x] Admin UI to configure repository settings and token updates. #ui #admin #github-sync
 - [ ] Enforce role-based visibility for Admin/Reviewer/Viewer across pages and actions. #ui #auth
 
 ## Utils

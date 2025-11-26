@@ -1,0 +1,10 @@
+//  ===================================================================================================================
+//  ? TIP:  It is recommended to use this file for overriding bootstrap extended variables (_bootstrap-extended/_variables.scss).
+//  Copy and paste variables as needed, modify their values, and remove the !default flag. 
+//  ===================================================================================================================
+
+// $font-size-root: 14px;
+
+// Ensure numeric button border width for Sass math (Bootstrap 5.3 defaults to CSS var)
+$input-btn-border-width: 1px;
+$btn-border-width: $input-btn-border-width;

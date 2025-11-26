@@ -9,6 +9,7 @@ use App\Repository\RepositoryConfigRepository;
 use App\Repository\SyncLogRepository;
 use App\Service\GitHubRepositoryValidator;
 use App\Service\GitHubSyncService;
+use App\Service\RepositoryTreeService;
 use App\Service\TokenCipher;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -26,6 +27,7 @@ class RepositoryController extends AbstractController
         private readonly DocumentNodeRepository $documentNodeRepository,
         private readonly SyncLogRepository $syncLogRepository,
         private readonly EntityManagerInterface $em,
+        private readonly RepositoryTreeService $repositoryTreeService
     ) {
     }
 
@@ -91,6 +93,8 @@ class RepositoryController extends AbstractController
             'config' => $config,
             'nodes' => $nodes,
             'logs' => $logs,
+            'stats' => $this->repositoryTreeService->computeStats($nodes),
+            'treeData' => $this->repositoryTreeService->buildTreeData($nodes, $config),
         ]);
     }
 
