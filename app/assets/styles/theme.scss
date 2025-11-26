@@ -1,0 +1,37 @@
+// Entry point for Sneat theme styles
+// Override Bootstrap variables that are CSS custom properties by default in BS 5.3
+// to concrete colors so Sneat's color-mixing Sass functions can operate at build time.
+$enable-dark-mode: false;
+$body-bg: #ffffff;
+$card-bg: #ffffff;
+
+$boxicons-font-path: 'boxicons';
+$boxicons-font-size-base: 16px;
+
+@import 'boxicons/css/boxicons';
+
+.bx {
+  vertical-align: middle;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+// Override font path
+@font-face {
+  font-family: 'boxicons';
+  font-weight: normal;
+  font-style: normal;
+
+  src: url('../fonts/boxicons.eot');
+  src: url('../fonts/boxicons.eot') format('embedded-opentype'),
+    url('../fonts/boxicons.woff2') format('woff2'),
+    url('../fonts/boxicons.woff') format('woff'),
+    url('../fonts/boxicons.ttf') format('truetype'),
+    url('../fonts/boxicons.svg?#boxicons') format('svg');
+}
+
+
+@import "../themes/scss/_bootstrap-extended.scss";
+@import 'bootstrap/scss/bootstrap';
+@import '../themes/scss/components';
+@import '../themes/scss/colors';
+@import "../themes/scss/theme-default.scss";
