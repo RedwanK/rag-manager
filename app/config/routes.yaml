@@ -9,3 +9,13 @@
 
 controllers:
     resource: routing.controllers
+
+
+app_homepage:
+    path: /
+    controller: Symfony\Bundle\FrameworkBundle\Controller\RedirectController
+    defaults:
+        route: 'repository_tree'
+        permanent: true
+        keepQueryParams: true
+        keepRequestMethod: true

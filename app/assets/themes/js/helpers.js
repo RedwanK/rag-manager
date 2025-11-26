@@ -831,6 +831,7 @@ const Helpers = {
 // * Initialization
 
 if (typeof window !== 'undefined') {
+  window.Helpers = Helpers
   Helpers.init()
 
   if (Helpers.isMobileDevice() && window.chrome) {

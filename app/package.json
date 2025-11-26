@@ -23,6 +23,7 @@
         "@symfony/stimulus-bridge": "^4.0.1",
         "@symfony/ux-turbo": "^2.31.0",
         "bootstrap": "^5.3.8",
-        "boxicons": "^2.1.4"
+        "boxicons": "^2.1.4",
+        "d3": "^7.9.0"
     }
 }

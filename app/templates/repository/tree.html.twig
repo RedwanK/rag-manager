@@ -1,57 +1,112 @@
-{% extends 'base.html.twig' %}
+{% extends 'layout/app.html.twig' %}
 
-{% block title %}Repository tree{% endblock %}
+{% block title %}Arbre du dépôt{% endblock %}
 
-{% block body %}
-    <h1>Repository {{ config.repositorySlug }}</h1>
-    <p>Last sync: {{ config.lastSyncAt ? config.lastSyncAt|date('Y-m-d H:i') : 'never' }} ({{ config.lastSyncStatus ?? 'n/a' }})</p>
+{% block page_header %}
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <p class="text-muted mb-1">Suivi : {{ config.repositorySlug }}</p>
+            <h4 class="mb-0">Arborescence du RAG</h4>
+            <div class="text-muted small mt-1">
+                Dernière synchro : {{ config.lastSyncAt ? config.lastSyncAt|date('Y-m-d H:i') : 'Jamais' }} ·
+                Statut : {{ config.lastSyncStatus ?? 'n/a' }}
+            </div>
+        </div>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            {% if is_granted('ROLE_ADMIN') %}
+                <form method="post" action="{{ path('repository_sync') }}" data-turbo="false">
+                    <button type="submit" class="btn btn-primary d-flex align-items-center gap-2">
+                        {{ ux_icon('bx:refresh') }}<span>Lancer une synchro</span>
+                    </button>
+                </form>
+            {% endif %}
+            <span class="badge bg-label-secondary text-uppercase">{{ stats.total }} noeuds</span>
+        </div>
+    </div>
+{% endblock %}
 
-    {% for message in app.flashes('error') %}
-        <div>{{ message }}</div>
-    {% endfor %}
-    {% for message in app.flashes('success') %}
-        <div>{{ message }}</div>
-    {% endfor %}
-
-    {% if is_granted('ROLE_ADMIN') %}
-        <form method="post" action="{{ path('repository_sync') }}">
-            <button type="submit">Trigger sync</button>
-        </form>
-    {% else %}
-        <p>You need admin rights to trigger a sync.</p>
-    {% endif %}
-
-    <table>
-        <thead>
-            <tr>
-                <th>Path</th>
-                <th>Type</th>
-                <th>Size</th>
-                <th>Last synced</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for node in nodes %}
-            <tr>
-                <td>{{ node.path }}</td>
-                <td>{{ node.type }}</td>
-                <td>{{ node.size ?? '-' }}</td>
-                <td>{{ node.lastSyncedAt ? node.lastSyncedAt|date('Y-m-d H:i') : 'never' }}</td>
-                <td>{{ node.lastSyncStatus ?? 'n/a' }}</td>
-            </tr>
-        {% else %}
-            <tr><td colspan="5">No cached nodes yet.</td></tr>
-        {% endfor %}
-        </tbody>
-    </table>
-
-    <h2>Recent syncs</h2>
-    <ul>
-        {% for log in logs %}
-            <li>{{ log.startedAt|date('Y-m-d H:i') }} - {{ log.status }} ({{ log.triggeredBy ?? 'unknown' }}) {{ log.message ? ' - ' ~ log.message : '' }}</li>
-        {% else %}
-            <li>No sync logs yet.</li>
-        {% endfor %}
-    </ul>
+{% block page_content %}
+    <div class="row g-4">
+        <div class="col-12">
+            {% include 'repository/_tree_view.html.twig' with { treeData: treeData, stats: stats } %}
+        </div>
+        <div class="col-xl-12">
+            <div class="card h-100">
+                <div class="card-header pb-0 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-1">Cache des noeuds</h6>
+                        <p class="text-muted small mb-0">Liste tabulaire des entrées connues</p>
+                    </div>
+                    <span class="badge bg-label-secondary">{{ nodes|length }} éléments</span>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive" style="max-height: 420px;">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Chemin</th>
+                                    <th class="text-nowrap">Type</th>
+                                    <th class="text-nowrap text-end">Taille</th>
+                                    <th class="text-nowrap">Dernière synchro</th>
+                                    <th class="text-nowrap">Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for node in nodes|slice(0, 50) %}
+                                <tr>
+                                    <td class="font-monospace">{{ node.path }}</td>
+                                    <td class="text-capitalize">{{ node.type }}</td>
+                                    <td class="text-end">{{ node.size ?? '—' }}</td>
+                                    <td>{{ node.lastSyncedAt ? node.lastSyncedAt|date('Y-m-d H:i') : 'Jamais' }}</td>
+                                    <td>
+                                        {% set status = node.lastSyncStatus ?? 'n/a' %}
+                                        <span class="badge bg-label-{{ status == 'synced' or status == 'success' ? 'success' : 'secondary' }}">{{ status }}</span>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr><td colspan="5" class="text-center text-muted">Aucun noeud en cache pour le moment.</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if nodes|length > 50 %}
+                        <p class="text-muted small mt-2 mb-0">Affichage des 50 premiers noeuds.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-12">
+            <div class="card h-100">
+                <div class="card-header pb-0">
+                    <h6 class="mb-1">Historique des synchronisations</h6>
+                    <p class="text-muted small mb-0">Dernières exécutions</p>
+                </div>
+                <div class="card-body">
+                    {% if logs is not empty %}
+                        <ul class="list-unstyled mb-0">
+                            {% for log in logs %}
+                                <li class="d-flex align-items-start mb-3">
+                                    {% set badge = log.status == 'success' ? 'success' : (log.status == 'failed' ? 'danger' : 'warning') %}
+                                    <span class="badge bg-label-{{ badge }} me-3 mt-1">
+                                        <i class="bx bx-time-five"></i>
+                                    </span>
+                                    <div>
+                                        <div class="fw-semibold">{{ log.startedAt|date('Y-m-d H:i') }}{% if log.finishedAt %} → {{ log.finishedAt|date('H:i') }}{% endif %}</div>
+                                        <div class="text-muted small mb-1">
+                                            {{ log.status }}{% if log.triggeredBy %} · {{ log.triggeredBy }}{% endif %}
+                                        </div>
+                                        {% if log.message %}
+                                            <div class="small">{{ log.message }}</div>
+                                        {% endif %}
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted mb-0">Aucune synchronisation enregistrée.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}

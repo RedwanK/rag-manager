@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+
+{% block html_class %}light-style customizer-hide{% endblock %}
+{% block body_class %}bg-body{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <div class="authentication-wrapper authentication-basic container-p-y">
+            <div class="authentication-inner p-5">
+                {% include 'layout/_flash_messages.html.twig' %}
+                {% block auth_content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

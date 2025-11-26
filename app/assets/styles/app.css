@@ -1,3 +1,32 @@
 body {
-    background-color: lightgray;
+    background-color: var(--bs-body-bg);
+    font-family: 'Public Sans', system-ui, -apple-system, sans-serif;
+}
+
+.repo-tree-canvas svg {
+    width: 100%;
+}
+
+.repo-tree-canvas {
+    min-height: 360px;
+}
+
+.repo-tree-canvas .link {
+    fill: none;
+    stroke: #e0e3eb;
+    stroke-width: 1.4px;
+}
+
+.repo-tree-canvas .repo-tree-node {
+    stroke: #e9ecef;
+    cursor: pointer;
+}
+
+.repo-tree-canvas .repo-tree-node.is-leaf {
+    opacity: 0.9;
+}
+
+.repo-tree-canvas text {
+    fill: #4b5563;
+    font-size: 0.9rem;
 }
