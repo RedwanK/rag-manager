@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 
 export default class extends Controller {
     static targets = ['canvas', 'details'];
-    static values = { tree: Object };
+    static values = { tree: Object, enqueueUrlTemplate: String, translations: Object };
 
     connect() {
         this.selectedNode = null;
@@ -198,24 +198,29 @@ export default class extends Controller {
         const data = node?.data || {};
         const lastSync = data.lastSyncedAt ? new Date(data.lastSyncedAt) : null;
         const status = this.nodeStatus(data);
+        const ingestion = this.ingestionStatus(data);
+        const enqueueAction = this.renderEnqueueAction(data);
+        const tDetails = (this.translationsValue && this.translationsValue.details) || {};
 
         this.detailsTarget.innerHTML = `
             <div class="d-flex align-items-center justify-content-between mb-2">
                 <div>
-                    <div class="small text-muted">Chemin</div>
+                    <div class="small text-muted">${this.escape(tDetails.path || 'Chemin')}</div>
                     <div class="fw-semibold">${this.escape(data.path || data.name || '')}</div>
                 </div>
                 <span class="badge bg-label-${status.color} text-uppercase">${status.label}</span>
             </div>
             <dl class="row mb-0 small">
-                <dt class="col-5 text-muted">Type</dt>
+                <dt class="col-5 text-muted">${this.escape(tDetails.type || 'Type')}</dt>
                 <dd class="col-7 text-capitalize mb-2">${this.escape(data.type || 'n/a')}</dd>
-                <dt class="col-5 text-muted">Taille</dt>
+                <dt class="col-5 text-muted">${this.escape(tDetails.size || 'Taille')}</dt>
                 <dd class="col-7 mb-2">${this.formatSize(data.size)}</dd>
-                <dt class="col-5 text-muted">Dernière synchro</dt>
-                <dd class="col-7 mb-2">${lastSync ? lastSync.toLocaleString() : 'Jamais'}</dd>
+                <dt class="col-5 text-muted">${this.escape(tDetails.lastSync || 'Dernière synchro')}</dt>
+                <dd class="col-7 mb-2">${lastSync ? lastSync.toLocaleString() : this.escape(tDetails.never || 'Jamais')}</dd>
+                <dt class="col-5 text-muted">${this.escape(tDetails.ingestion || 'Ingestion')}</dt>
+                <dd class="col-7 mb-2"><span class="badge bg-label-${ingestion.color} text-uppercase">${ingestion.label}</span></dd>
             </dl>
-            <p class="text-muted mb-0">Sélectionnez un noeud pour préparer les actions futures (ouvrir, ignorer, supprimer...).</p>
+            ${enqueueAction}
         `;
     }
 
@@ -231,11 +236,23 @@ export default class extends Controller {
     }
 
     nodeColor(node) {
-        const status = this.nodeStatus(node.data);
-        if (status.color === 'danger') {
-            return '#ff3e1d';
+        const status = this.ingestionStatus(node.data);
+        
+        if (node.data.type === 'tree') return '#696cff';
+
+        switch(status.color) {
+            case 'danger': 
+                return '#ff3e1d';
+            case 'warning': 
+                return '#ffab00';
+            case 'info':
+                return '#03c3ec';
+            case 'success':
+                return '#71dd37';
+            case 'secondary':
+                return '#8592a3';
         }
-        return node.data.type === 'tree' ? '#696cff' : '#7987a1';
+        
     }
 
     curve(d) {
@@ -268,5 +285,47 @@ export default class extends Controller {
 
     parseTree(tree) {
         return JSON.parse(JSON.stringify(tree));
+    }
+
+    ingestionStatus(data) {
+        const status = (data.ingestionStatus || 'unindexed').toLowerCase();
+        const labels = (this.translationsValue && this.translationsValue.ingestion) || {};
+        
+        if(status === "unindexed" && !data.canEnqueue) return { label: labels.cant_enqueue || 'cant_enqueue', color: 'secondary' };
+
+        switch (status) {
+            case 'processing':
+            case 'queued':
+                return { label: labels.queued || 'queued', color: 'warning' };
+            case 'indexed':
+                return { label: labels.indexed || 'indexed', color: 'success' };
+            case 'failed':
+            case 'download_failed':
+                return { label: labels[status] || status, color: 'danger' };
+            default:
+                return { label: labels.unindexed || 'unindexed', color: 'info' };
+        }
+    }
+
+    renderEnqueueAction(data) {
+        const t = this.translationsValue || {};
+        if (data.type !== 'blob') {
+            return `<div class="text-muted small mt-2">${this.escape(t.folderHint || '')}</div>`;
+        }
+
+        const canEnqueue = Boolean(data.canEnqueue);
+        const urlTemplate = this.enqueueUrlTemplateValue || '';
+        const actionUrl = data.id ? urlTemplate.replace('NODE_ID', data.id) : '';
+        const disabledReason = t.disabledReason || '';
+        const enqueueLabel = t.enqueueLabel || '';
+
+        return `
+            <form method="post" action="${actionUrl}" data-turbo="false" class="mt-2">
+                <input type="hidden" name="_token" value="${this.escape(data.enqueueToken || '')}">
+                <button type="submit" class="btn btn-sm btn-primary" ${canEnqueue ? '' : 'disabled'}>
+                    ${canEnqueue ? this.escape(enqueueLabel) : this.escape(disabledReason)}
+                </button>
+            </form>
+        `;
     }
 }
