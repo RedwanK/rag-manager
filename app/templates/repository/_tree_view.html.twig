@@ -16,15 +16,15 @@
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
             <div class="btn-group">
                 <button class="btn btn-outline-secondary btn-sm" type="button" data-action="repository-tree#expandAll">
-                    <i class="bx bx-expand"></i>
+                    {{ ux_icon('bx:expand-alt') }}
                     <span class="ms-1">{{ 'repository.tree.expand_all'|trans }}</span>
                 </button>
                 <button class="btn btn-outline-secondary btn-sm" type="button" data-action="repository-tree#collapseAll">
-                    <i class="bx bx-collapse"></i>
+                    {{ ux_icon('bx:collapse-alt') }}
                     <span class="ms-1">{{ 'repository.tree.collapse_all'|trans }}</span>
                 </button>
                 <button class="btn btn-outline-secondary btn-sm" type="button" data-action="repository-tree#resetView">
-                    <i class="bx bx-refresh"></i>
+                    {{ ux_icon('bx:reset') }}
                     <span class="ms-1">{{ 'repository.tree.reset'|trans }}</span>
                 </button>
             </div>

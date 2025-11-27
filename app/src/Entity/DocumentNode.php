@@ -4,11 +4,14 @@ namespace App\Entity;
 
 use App\Repository\DocumentNodeRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Timestampable\Traits\TimestampableEntity;
 
 #[ORM\Entity(repositoryClass: DocumentNodeRepository::class)]
 #[ORM\Table(name: 'document_node')]
 class DocumentNode
 {
+    use TimestampableEntity;
+    
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -35,6 +38,9 @@ class DocumentNode
 
     #[ORM\Column(length: 64, nullable: true)]
     private ?string $lastSyncStatus = null;
+
+    #[ORM\OneToOne(mappedBy: 'documentNode', cascade: ['persist', 'remove'])]
+    private ?IngestionQueueItem $ingestionQueueItem = null;
 
     public function getId(): ?int
     {
@@ -115,6 +121,23 @@ class DocumentNode
     public function setLastSyncStatus(?string $lastSyncStatus): self
     {
         $this->lastSyncStatus = $lastSyncStatus;
+        return $this;
+    }
+
+    public function getIngestionQueueItem(): ?IngestionQueueItem
+    {
+        return $this->ingestionQueueItem;
+    }
+
+    public function setIngestionQueueItem(IngestionQueueItem $ingestionQueueItem): static
+    {
+        // set the owning side of the relation if necessary
+        if ($ingestionQueueItem->getDocumentNode() !== $this) {
+            $ingestionQueueItem->setDocumentNode($this);
+        }
+
+        $this->ingestionQueueItem = $ingestionQueueItem;
+
         return $this;
     }
 }
