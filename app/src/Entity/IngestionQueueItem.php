@@ -11,6 +11,15 @@ use Gedmo\Timestampable\Traits\TimestampableEntity;
 #[ORM\Entity(repositoryClass: IngestionQueueItemRepository::class)]
 class IngestionQueueItem
 {
+    public const STATUS_QUEUED = 'queued';
+    public const STATUS_PROCESSING = 'processing';
+    public const STATUS_INDEXED = 'indexed';
+    public const STATUS_FAILED = 'failed';
+    public const STATUS_DOWNLOAD_FAILED = 'download_failed';
+
+    public const SOURCE_USER = 'user';
+    public const SOURCE_SYSTEM = 'system';
+
     use TimestampableEntity;
     
     #[ORM\Id]
@@ -125,7 +134,7 @@ class IngestionQueueItem
         return $this->endedAt;
     }
 
-    public function setEndedAt(\DateTimeImmutable $endedAt): static
+    public function setEndedAt(?\DateTimeImmutable $endedAt): static
     {
         $this->endedAt = $endedAt;
 
