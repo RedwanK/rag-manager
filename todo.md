@@ -34,9 +34,9 @@
 - [x] Enforce duplicate protection (no re-enqueue when queued/processing) and size/extension validation with user-friendly errors. #ingestion #validation #ui
 
 ## UI (tree/table)
-- [ ] Add “Ajouter à la file” action on files (not folders) with toast/flash feedback and role gating. #ui #ingestion #auth
-- [ ] Render badges/colors for directory, unindexed, queued, processing, indexed, failed/download_failed states in tree and list views. #ui #ingestion
-- [ ] Detail panel shows ingestion status, last attempt, size/branch and links to item logs. #ui #logs #ingestion
+- [x] Add “Ajouter à la file” action on files (not folders) with toast/flash feedback and role gating. #ui #ingestion #auth
+- [x] Render badges/colors for directory, unindexed, queued, processing, indexed, failed/download_failed states in tree and list views. #ui #ingestion
+- [x] Detail panel shows ingestion status, last attempt, size/branch and links to item logs. #ui #logs #ingestion
 - [ ] Provide retry/re-index action for failed/download_failed items (creates/reuses queue item with audit of user). #ui #ingestion
 
 ## Improvements
