@@ -30,7 +30,6 @@
                     <thead>
                         <tr>
                             <th>{{ 'user.fields.email'|trans }}</th>
-                            <th>{{ 'user.fields.status'|trans }}</th>
                             <th>{{ 'user.fields.roles'|trans }}</th>
                             <th class="text-end">{{ 'user.labels.actions'|trans }}</th>
                         </tr>
@@ -39,10 +38,6 @@
                     {% for user in users %}
                         <tr>
                             <td>{{ user.email }}</td>
-                            <td>
-                                {% set badge = user.status == 'active' ? 'success' : 'secondary' %}
-                                <span class="badge bg-label-{{ badge }} text-uppercase">{{ ('user.status.' ~ user.status)|trans }}</span>
-                            </td>
                             <td>
                                 <div class="d-flex flex-wrap gap-1">
                                     {% for role in user.roles %}
