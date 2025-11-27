@@ -70,7 +70,7 @@ class IngestionQueueManager
         return $queueItem;
     }
 
-    private function assertCanEnqueue(DocumentNode $documentNode): void
+    public function assertCanEnqueue(DocumentNode $documentNode): void
     {
         if ($documentNode->getType() !== 'blob') {
             throw new RuntimeException('Seuls les fichiers peuvent être ajoutés à la file d\'ingestion.');

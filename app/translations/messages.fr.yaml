@@ -30,6 +30,8 @@ form:
     edit: "Modifier"
     back_to_list: "Retour à la liste"
     close: "Fermer"
+    delete: "Supprimer"
+    cancel: "Annuler"
 
 repository:
   titles:
@@ -104,6 +106,54 @@ repository:
     missing_config: "Configurez un dépôt avant de lancer une synchronisation."
     sync_dispatched: "Synchronisation déclenchée."
 
+csrf:
+  invalid: "Jeton CSRF invalide."
+
+ingestion:
+  menu: "File d'ingestion"
+  queue:
+    titles:
+      index: "File d'attente d'ingestion"
+      edit: "Éditer un élément"
+    subtitles:
+      supervision: "Supervision"
+    labels:
+      items: "Éléments"
+      count: "%count% items"
+      empty: "Aucun élément dans la file."
+      none: "—"
+      disabled: "Document déjà en file ou en cours."
+      folder_not_eligible: "Les dossiers ne peuvent pas être ajoutés à la file."
+    fields:
+      path: "Chemin"
+      status: "Statut"
+      source: "Source"
+      added_by: "Ajouté par"
+      created_at: "Créé"
+      actions: "Actions"
+      rag_message: "Message RAG"
+      storage_path: "Chemin de stockage"
+    actions:
+      enqueue: "Ajouter à la file"
+    confirm:
+      delete: "Supprimer cet élément ?"
+    flash:
+      updated: "Élément mis à jour."
+      enqueued: "Document ajouté à la file d'ingestion."
+      deleted: "Élément supprimé."
+      not_found: "Document introuvable."
+  status:
+    queued: "En file"
+    processing: "En traitement"
+    indexed: "Indexé"
+    failed: "Échec"
+    download_failed: "Téléchargement échoué"
+    unindexed: "Non indexé"
+    cant_enqueue: "Ne peut pas être indexé"
+  source:
+    user: "Utilisateur"
+    system: "Système"
+
 user:
   titles:
     index: "Gestion des utilisateurs"
@@ -152,3 +202,7 @@ user:
     created: "Utilisateur créé avec succès."
     updated: "Utilisateur mis à jour."
     password_reset: "Mot de passe réinitialisé."
+ingestion_queue_item:
+  flash:
+    updated: "Élément mis à jour"
+    not_found: "Document introuvable."

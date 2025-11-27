@@ -1,0 +1,38 @@
+{% extends 'layout/app.html.twig' %}
+
+{% block title %}{{ 'ingestion.queue.titles.edit'|trans }}{% endblock %}
+
+{% block page_header %}
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+        <div>
+            <p class="text-muted mb-1">{{ 'ingestion.queue.subtitles.supervision'|trans }}</p>
+            <h4 class="mb-0">{{ 'ingestion.queue.titles.edit'|trans }}</h4>
+            <div class="text-muted small mt-1">{{ item.documentNode.path }}</div>
+        </div>
+        <a class="btn btn-outline-secondary" href="{{ path('ingestion_queue_index') }}">{{ 'form.actions.back_to_list'|trans }}</a>
+    </div>
+{% endblock %}
+
+{% block page_content %}
+    <div class="card">
+        <div class="card-body">
+            {{ form_start(form) }}
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        {{ form_row(form.status) }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form_row(form.storagePath) }}
+                    </div>
+                    <div class="col-12">
+                        {{ form_row(form.ragMessage) }}
+                    </div>
+                    <div class="col-12 d-flex justify-content-end gap-2">
+                        <a class="btn btn-secondary" href="{{ path('ingestion_queue_index') }}">{{ 'form.actions.cancel'|trans }}</a>
+                        <button class="btn btn-primary" type="submit">{{ 'form.actions.save'|trans }}</button>
+                    </div>
+                </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
+{% endblock %}

@@ -18,6 +18,15 @@
             </a>
         </li>
 
+        {% if is_granted('ROLE_EDITOR') %}
+            <li class="menu-item {{ currentRoute starts with 'ingestion_queue_' ? 'active' }}">
+                <a href="{{ path('ingestion_queue_index') }}" class="menu-link d-flex align-items-center">
+                    {{ ux_icon('bx:list-check') }}&nbsp;
+                    <div>{{ 'ingestion.menu'|trans }}</div>
+                </a>
+            </li>
+        {% endif %}
+
         {% if is_granted('ROLE_ADMIN') %}
             <li class="menu-item {{ currentRoute starts with 'repository_index' ? 'active' }}">
                 <a href="{{ path('repository_index') }}" class="menu-link d-flex align-items-center">

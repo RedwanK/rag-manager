@@ -1,6 +1,29 @@
 <div class="card"
      data-controller="repository-tree"
-     data-repository-tree-tree-value='{{ treeData|json_encode|e('html_attr') }}'>
+     data-repository-tree-tree-value='{{ treeData|json_encode|e('html_attr') }}'
+     data-repository-tree-enqueue-url-template-value="{{ path('ingestion_queue_enqueue', {id: 'NODE_ID'}) }}"
+     data-repository-tree-translations-value='{{ {
+         enqueueLabel: 'ingestion.queue.actions.enqueue'|trans,
+         disabledReason: 'ingestion.queue.labels.disabled'|trans,
+         folderHint: 'ingestion.queue.labels.folder_not_eligible'|trans,
+         ingestion: {
+             queued: 'ingestion.status.queued'|trans,
+             processing: 'ingestion.status.processing'|trans,
+             indexed: 'ingestion.status.indexed'|trans,
+             failed: 'ingestion.status.failed'|trans,
+             download_failed: 'ingestion.status.download_failed'|trans,
+             unindexed: 'ingestion.status.unindexed'|trans,
+             cant_enqueue: 'ingestion.status.cant_enqueue'|trans,
+         },
+         details: {
+             path: 'repository.labels.path'|trans,
+             type: 'repository.labels.type'|trans,
+             size: 'repository.labels.size'|trans,
+             lastSync: 'repository.labels.last_sync_at'|trans,
+             ingestion: 'ingestion.queue.fields.status'|trans,
+             never: 'repository.labels.never'|trans
+         }
+     }|json_encode|e('html_attr') }}'>
 
     <div class="card-header pb-0 d-flex flex-wrap justify-content-between align-items-start gap-3">
         <div>

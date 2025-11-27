@@ -1,0 +1,70 @@
+{% extends 'layout/app.html.twig' %}
+
+{% block title %}{{ 'ingestion.queue.titles.index'|trans }}{% endblock %}
+
+{% block page_header %}
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+        <div>
+            <p class="text-muted mb-1">{{ 'ingestion.queue.subtitles.supervision'|trans }}</p>
+            <h4 class="mb-0">{{ 'ingestion.queue.titles.index'|trans }}</h4>
+        </div>
+    </div>
+{% endblock %}
+
+{% block page_content %}
+    <div class="card">
+        <div class="card-header pb-0 d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">{{ 'ingestion.queue.labels.items'|trans }}</h6>
+            <span class="badge bg-label-primary">{{ 'ingestion.queue.labels.count'|trans({'%count%': items|length}) }}</span>
+        </div>
+        <div class="card-body px-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th>{{ 'ingestion.queue.fields.path'|trans }}</th>
+                            <th>{{ 'ingestion.queue.fields.status'|trans }}</th>
+                            <th>{{ 'ingestion.queue.fields.source'|trans }}</th>
+                            <th>{{ 'ingestion.queue.fields.added_by'|trans }}</th>
+                            <th>{{ 'ingestion.queue.fields.created_at'|trans }}</th>
+                            <th class="text-end">{{ 'ingestion.queue.fields.actions'|trans }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in items %}
+                        <tr>
+                            <td class="font-monospace small">{{ item.documentNode.path }}</td>
+                            <td>
+                                {% set badge = {
+                                    'queued': 'warning',
+                                    'processing': 'info',
+                                    'indexed': 'success',
+                                    'failed': 'danger',
+                                    'download_failed': 'danger'
+                                }[item.status] ?? 'secondary' %}
+                                <span class="badge bg-label-{{ badge }} text-uppercase">{{ ('ingestion.status.' ~ item.status)|trans }}</span>
+                            </td>
+                            <td class="text-capitalize">{{ ('ingestion.source.' ~ item.source)|trans }}</td>
+                            <td>{{ item.addedBy ? item.addedBy.userIdentifier : 'ingestion.queue.labels.none'|trans }}</td>
+                            <td class="text-nowrap">{{ item.createdAt ? item.createdAt|date('Y-m-d H:i') : 'ingestion.queue.labels.none'|trans }}</td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-primary" href="{{ path('ingestion_queue_edit', {id: item.id}) }}">
+                                    {{ 'form.actions.edit'|trans }}
+                                </a>
+                                <form method="post" action="{{ path('ingestion_queue_delete', {id: item.id}) }}" class="d-inline" onsubmit="return confirm('{{ 'ingestion.queue.confirm.delete'|trans }}');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_ingestion_' ~ item.id) }}">
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">{{ 'form.actions.delete'|trans }}</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">{{ 'ingestion.queue.labels.empty'|trans }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}
