@@ -9,7 +9,7 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
- * Application user identified by email with role and status management.
+ * Application user identified by email with role.
  */
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
@@ -37,12 +37,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     #[ORM\Column]
     private ?string $password = null;
-
-    /**
-     * Lifecycle status of the user account (e.g. active/inactive).
-     */
-    #[ORM\Column(length: 32, options: ['default' => 'active'])]
-    private string $status = 'active';
 
     public function getId(): ?int
     {
@@ -105,18 +99,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPassword(string $password): static
     {
         $this->password = $password;
-
-        return $this;
-    }
-
-    public function getStatus(): string
-    {
-        return $this->status;
-    }
-
-    public function setStatus(string $status): static
-    {
-        $this->status = $status;
 
         return $this;
     }

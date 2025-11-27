@@ -37,13 +37,6 @@ class UserType extends AbstractType
                 ],
                 'multiple' => true,
                 'expanded' => true,
-            ])
-            ->add('status', ChoiceType::class, [
-                'label' => 'user.fields.status',
-                'choices' => [
-                    'user.status.active' => 'active',
-                    'user.status.inactive' => 'inactive',
-                ],
             ]);
 
         if ($options['include_password']) {
