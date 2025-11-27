@@ -21,6 +21,11 @@ class GitHubApiRouteResolver
             "base" => "repos/%s/git/trees/%s",
             "nbRouteParams" => 2,
             "method" => "GET"
+        ],
+        'fileContents' => [
+            "base" => "repos/%s/contents/%s",
+            "nbRouteParams" => 2,
+            "method" => "GET"
         ]
     ];
 
