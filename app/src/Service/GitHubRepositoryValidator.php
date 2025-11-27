@@ -20,12 +20,16 @@ class GitHubRepositoryValidator
             'headers' => [
                 'Authorization' => 'Bearer ' . $token,
                 'Accept' => 'application/vnd.github+json',
+                'User-Agent' => 'rag-manager',
                 'X-GitHub-Api-Version' => "2022-11-28"
             ],
         ]);
 
         if (200 !== $response->getStatusCode()) {
-            throw new \RuntimeException(sprintf('GitHub returned %s while validating repository.', $response->getStatusCode()));
+            $payload = $response->toArray(false);
+            $message = $payload['message'] ?? 'GitHub returned an unexpected response while validating repository.';
+
+            throw new \RuntimeException(sprintf('[%s] %s', $response->getStatusCode(), $message));
         }
 
         return $response->toArray();

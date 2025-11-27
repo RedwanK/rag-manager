@@ -77,9 +77,10 @@ class RepositoryController extends AbstractController
     }
 
     #[Route('/tree', name: 'tree')]
+    #[IsGranted('ROLE_USER')]
     public function tree(): Response
     {
-        // this is temporary because we want to work with only 1 repository config at first. 
+        // this is temporary because we want to work with only 1 repository config at first.
         // TODO : update this to handle multi repository (maybe in Lot 3)
         $config = $this->repositoryConfigRepository->findOneBy([]);
         if (!$config) {
@@ -99,6 +100,7 @@ class RepositoryController extends AbstractController
     }
 
     #[Route('/sync', name: 'sync', methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function sync(GitHubSyncService $syncService): RedirectResponse
     {
         $config = $this->repositoryConfigRepository->findOneBy([]);

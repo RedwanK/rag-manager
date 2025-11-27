@@ -27,7 +27,12 @@ class TokenCipher
         $nonce = substr($decoded, 0, SODIUM_CRYPTO_SECRETBOX_NONCEBYTES);
         $cipher = substr($decoded, SODIUM_CRYPTO_SECRETBOX_NONCEBYTES);
 
-        return sodium_crypto_secretbox_open($cipher, $nonce, $this->getKey());
+        $plaintext = sodium_crypto_secretbox_open($cipher, $nonce, $this->getKey());
+        if ($plaintext === false) {
+            throw new \RuntimeException('Unable to decrypt payload with the provided key.');
+        }
+
+        return $plaintext;
     }
 
     private function getKey(): string
