@@ -114,7 +114,7 @@ class RepositoryController extends AbstractController
      * Dispatch a manual synchronization for reviewers and administrators.
      */
     #[Route('/sync', name: 'sync', methods: ['POST'])]
-    #[IsGranted('ROLE_REVIEWER')]
+    #[IsGranted('ROLE_EDITOR')]
     public function sync(GitHubSyncService $syncService): RedirectResponse
     {
         $config = $this->repositoryConfigRepository->findOneBy([]);

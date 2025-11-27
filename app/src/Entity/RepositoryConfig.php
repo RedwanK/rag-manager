@@ -4,12 +4,15 @@ namespace App\Entity;
 
 use App\Repository\RepositoryConfigRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Timestampable\Traits\TimestampableEntity;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: RepositoryConfigRepository::class)]
 #[ORM\Table(name: 'repository_config')]
 class RepositoryConfig
 {
+    use TimestampableEntity;
+    
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]

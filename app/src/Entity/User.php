@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -37,6 +39,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     #[ORM\Column]
     private ?string $password = null;
+
+    /**
+     * @var Collection<int, IngestionQueueItem>
+     */
+    #[ORM\OneToMany(targetEntity: IngestionQueueItem::class, mappedBy: 'addedBy')]
+    private Collection $ingestionQueueItems;
+
+    public function __construct()
+    {
+        $this->ingestionQueueItems = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -118,5 +131,35 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function eraseCredentials(): void
     {
         // @deprecated, to be removed when upgrading to Symfony 8
+    }
+
+    /**
+     * @return Collection<int, IngestionQueueItem>
+     */
+    public function getIngestionQueueItems(): Collection
+    {
+        return $this->ingestionQueueItems;
+    }
+
+    public function addIngestionQueueItem(IngestionQueueItem $ingestionQueueItem): static
+    {
+        if (!$this->ingestionQueueItems->contains($ingestionQueueItem)) {
+            $this->ingestionQueueItems->add($ingestionQueueItem);
+            $ingestionQueueItem->setAddedBy($this);
+        }
+
+        return $this;
+    }
+
+    public function removeIngestionQueueItem(IngestionQueueItem $ingestionQueueItem): static
+    {
+        if ($this->ingestionQueueItems->removeElement($ingestionQueueItem)) {
+            // set the owning side to null (unless already changed)
+            if ($ingestionQueueItem->getAddedBy() === $this) {
+                $ingestionQueueItem->setAddedBy(null);
+            }
+        }
+
+        return $this;
     }
 }
