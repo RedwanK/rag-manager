@@ -26,9 +26,9 @@
 # Lot 2 Tasks
 
 ## Ingestion queue & storage
-- [ ] Create `ingestion_queue_item` entity (path, branch, sha, size_bytes, storage_path, status queued|processing|indexed|failed|download_failed, source, timestamps, message, FK repo/doc/user) persisted in MySQL. #db #ingestion #rag
-- [ ] Create `ingestion_log` entity linked to queue item (level info|warning|error, message, context json, created_at). #db #logs #ingestion
-- [ ] Extend `document_node` with ingestion_status + last_ingested_at to surface last known ingestion state. #db #ingestion #ui
+- [x] Create `ingestion_queue_item` entity (path, branch, sha, size_bytes, storage_path, status queued|processing|indexed|failed|download_failed, source, timestamps, message, FK repo/doc/user) persisted in MySQL. #db #ingestion #rag
+- [x] Create `ingestion_log` entity linked to queue item (level info|warning|error, message, context json, created_at). #db #logs #ingestion
+- [x] Extend `document_node` with ingestion_status + last_ingested_at to surface last known ingestion state. #db #ingestion #ui
 - [ ] Add `rag_shared_dir` app config and secure path building for downloaded artifacts. #config #ops #ingestion
 - [ ] On enqueue, download file from GitHub default branch and write to `rag_shared_dir`; mark status queued or download_failed with message. #ingestion #github-sync #fs
 - [ ] Enforce duplicate protection (no re-enqueue when queued/processing) and size/extension validation with user-friendly errors. #ingestion #validation #ui
@@ -38,3 +38,7 @@
 - [ ] Render badges/colors for directory, unindexed, queued, processing, indexed, failed/download_failed states in tree and list views. #ui #ingestion
 - [ ] Detail panel shows ingestion status, last attempt, size/branch and links to item logs. #ui #logs #ingestion
 - [ ] Provide retry/re-index action for failed/download_failed items (creates/reuses queue item with audit of user). #ui #ingestion
+
+## Improvements
+- [ ] Create an extension guesser based on the name and / or path of a document to update the document type with accurate value #improvements 
+- [ ] Fix form errors when creating / editing a user. #improvements
