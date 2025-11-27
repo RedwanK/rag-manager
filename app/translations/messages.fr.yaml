@@ -4,7 +4,7 @@ app:
 auth:
   login:
     title: "Connexion"
-    heading: "Bienvenue 👋"
+    heading: "HEEEELLOOOOO 👋"
     subtitle: "Connectez-vous pour gérer votre RAG."
     email: "Email"
     password: "Mot de passe"
@@ -122,11 +122,11 @@ user:
     password_confirm: "Confirmation du mot de passe"
   roles:
     admin: "Administrateur"
-    reviewer: "Relecteur"
+    reviewer: "Editeur"
     viewer: "Lecteur"
     label:
       ROLE_ADMIN: "Administrateur"
-      ROLE_REVIEWER: "Relecteur"
+      ROLE_REVIEWER: "Editeur"
       ROLE_VIEWER: "Lecteur"
       ROLE_USER: "Utilisateur"
   status:
