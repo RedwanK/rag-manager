@@ -6,15 +6,15 @@
         <li class="p-4">
             <span class="app-brand-logo demo d-flex align-items-center">
                 <i class="bx bxs-data fs-2 lh-1 text-primary"></i>
-                <span class="app-brand-text demo menu-text fw-bolder ms-2">RAG Manager</span>       
+                <span class="app-brand-text demo menu-text fw-bolder ms-2">{{ 'app.name'|trans }}</span>
             </span>
-            
+
         </li>
-    
+
         <li class="menu-item {{ currentRoute starts with 'repository_tree' ? 'active' }}">
             <a href="{{ path('repository_tree') }}" class="menu-link d-flex align-items-center">
                 {{ ux_icon('bx:file-find') }}&nbsp;
-                <div>Arbre du RAG</div>
+                <div>{{ 'menu.tree'|trans }}</div>
             </a>
         </li>
 
@@ -22,18 +22,24 @@
             <li class="menu-item {{ currentRoute starts with 'repository_index' ? 'active' }}">
                 <a href="{{ path('repository_index') }}" class="menu-link d-flex align-items-center">
                     {{ ux_icon('bi:gear-wide') }}&nbsp;
-                    <div>Configuration du dépot</div>
+                    <div>{{ 'menu.repository'|trans }}</div>
+                </a>
+            </li>
+            <li class="menu-item {{ currentRoute starts with 'admin_user_' ? 'active' }}">
+                <a href="{{ path('admin_user_index') }}" class="menu-link d-flex align-items-center">
+                    {{ ux_icon('bx:user-circle') }}&nbsp;
+                    <div>{{ 'menu.users'|trans }}</div>
                 </a>
             </li>
         {% endif %}
 
         <li class="menu-header small text-uppercase">
-            <span class="menu-header-text">Connecté</span>
-            <div class="fw-semibold mb-2">{{ app.user ? app.user.userIdentifier : 'Invité' }}</div>
+            <span class="menu-header-text">{{ 'menu.connected'|trans }}</span>
+            <div class="fw-semibold mb-2">{{ app.user ? app.user.userIdentifier : 'menu.guest'|trans }}</div>
             <a class="btn btn-sm btn-outline-secondary text-center" href="{{ path('app_logout') }}">
                 {{ ux_icon('bx:log-out') }}
-                <span>Déconnexion</span>
-            </a>        
+                <span>{{ 'menu.logout'|trans }}</span>
+            </a>
         </li>
     </ul>
 </aside>

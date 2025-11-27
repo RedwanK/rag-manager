@@ -15,6 +15,9 @@ use Symfony\Component\Console\Question\Question;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
+/**
+ * Console command to create users with hashed passwords and roles.
+ */
 #[AsCommand(
     name: 'app:user:create',
     description: 'Create a user with hashed password and roles.',
@@ -39,7 +42,7 @@ class CreateUserCommand extends Command
                 null,
                 InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
                 'Roles to assign (repeatable option)',
-                ['ROLE_USER']
+                ['ROLE_VIEWER']
             );
     }
 

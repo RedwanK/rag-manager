@@ -18,8 +18,12 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
-#[Route('/admin/repository', name: 'repository_')]
+/**
+ * Handle repository configuration, tree visualization, and synchronization triggers.
+ */
+#[Route('/repository', name: 'repository_')]
 class RepositoryController extends AbstractController
 {
     public function __construct(
@@ -27,10 +31,14 @@ class RepositoryController extends AbstractController
         private readonly DocumentNodeRepository $documentNodeRepository,
         private readonly SyncLogRepository $syncLogRepository,
         private readonly EntityManagerInterface $em,
-        private readonly RepositoryTreeService $repositoryTreeService
+        private readonly RepositoryTreeService $repositoryTreeService,
+        private readonly TranslatorInterface $translator
     ) {
     }
 
+    /**
+     * Display and update repository configuration for administrators.
+     */
     #[Route('/', name: 'index')]
     #[IsGranted('ROLE_ADMIN')]
     public function index(Request $request, GitHubRepositoryValidator $validator, TokenCipher $cipher): Response
@@ -55,16 +63,16 @@ class RepositoryController extends AbstractController
             try {
                 $validator->assertRepositoryIsReachable($data->getOwner(), $data->getName(), $token);
             } catch (\Exception $e) {
-                $this->addFlash('error', 'It seems there is a token issue here.');
+                $this->addFlash('error', $this->translator->trans('repository.flash.token_error'));
                 return $this->redirectToRoute('repository_index');
             }
-            
+
             $data->setEncryptedToken($cipher->encrypt($token));
 
             $this->em->persist($data);
             $this->em->flush();
 
-            $this->addFlash('success', 'Configuration saved. Tokens are redacted after persistence.');
+            $this->addFlash('success', $this->translator->trans('repository.flash.saved'));
 
             return $this->redirectToRoute('repository_index');
         }
@@ -76,10 +84,14 @@ class RepositoryController extends AbstractController
         ]);
     }
 
+    /**
+     * Render the cached repository tree for viewers and above.
+     */
     #[Route('/tree', name: 'tree')]
+    #[IsGranted('ROLE_VIEWER')]
     public function tree(): Response
     {
-        // this is temporary because we want to work with only 1 repository config at first. 
+        // this is temporary because we want to work with only 1 repository config at first.
         // TODO : update this to handle multi repository (maybe in Lot 3)
         $config = $this->repositoryConfigRepository->findOneBy([]);
         if (!$config) {
@@ -98,17 +110,21 @@ class RepositoryController extends AbstractController
         ]);
     }
 
+    /**
+     * Dispatch a manual synchronization for reviewers and administrators.
+     */
     #[Route('/sync', name: 'sync', methods: ['POST'])]
+    #[IsGranted('ROLE_REVIEWER')]
     public function sync(GitHubSyncService $syncService): RedirectResponse
     {
         $config = $this->repositoryConfigRepository->findOneBy([]);
         if (!$config) {
-            $this->addFlash('error', 'Configure a repository first.');
+            $this->addFlash('error', $this->translator->trans('repository.flash.missing_config'));
             return $this->redirectToRoute('repository_tree');
         }
 
         $syncService->syncRepository($config, $this->getUser()?->getUserIdentifier() ?? 'anonymous');
-        $this->addFlash('success', 'Sync dispatched.');
+        $this->addFlash('success', $this->translator->trans('repository.flash.sync_dispatched'));
 
         return $this->redirectToRoute('repository_tree');
     }

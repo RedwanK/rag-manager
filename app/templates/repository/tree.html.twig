@@ -1,26 +1,26 @@
 {% extends 'layout/app.html.twig' %}
 
-{% block title %}Arbre du dépôt{% endblock %}
+{% block title %}{{ 'repository.titles.tree'|trans }}{% endblock %}
 
 {% block page_header %}
     <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
         <div>
-            <p class="text-muted mb-1">Suivi : {{ config.repositorySlug }}</p>
-            <h4 class="mb-0">Arborescence du RAG</h4>
+            <p class="text-muted mb-1">{{ 'repository.labels.tracking'|trans({'%slug%': config.repositorySlug}) }}</p>
+            <h4 class="mb-0">{{ 'repository.titles.tree'|trans }}</h4>
             <div class="text-muted small mt-1">
-                Dernière synchro : {{ config.lastSyncAt ? config.lastSyncAt|date('Y-m-d H:i') : 'Jamais' }} ·
-                Statut : {{ config.lastSyncStatus ?? 'n/a' }}
+                {{ 'repository.labels.last_sync'|trans }} : {{ config.lastSyncAt ? config.lastSyncAt|date('Y-m-d H:i') : 'repository.labels.never'|trans }} ·
+                {{ 'repository.labels.status'|trans }} : {{ config.lastSyncStatus ?? 'n/a' }}
             </div>
         </div>
         <div class="d-flex flex-wrap align-items-center gap-2">
-            {% if is_granted('ROLE_ADMIN') %}
+            {% if is_granted('ROLE_EDITOR') %}
                 <form method="post" action="{{ path('repository_sync') }}" data-turbo="false">
                     <button type="submit" class="btn btn-primary d-flex align-items-center gap-2">
-                        {{ ux_icon('bx:refresh') }}<span>Lancer une synchro</span>
+                        {{ ux_icon('bx:refresh') }}<span>{{ 'repository.actions.sync'|trans }}</span>
                     </button>
                 </form>
             {% endif %}
-            <span class="badge bg-label-secondary text-uppercase">{{ stats.total }} noeuds</span>
+            <span class="badge bg-label-secondary text-uppercase">{{ 'repository.labels.node_count'|trans({'%count%': stats.total}) }}</span>
         </div>
     </div>
 {% endblock %}
@@ -34,21 +34,21 @@
             <div class="card h-100">
                 <div class="card-header pb-0 d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="mb-1">Cache des noeuds</h6>
-                        <p class="text-muted small mb-0">Liste tabulaire des entrées connues</p>
+                        <h6 class="mb-1">{{ 'repository.sections.cache.title'|trans }}</h6>
+                        <p class="text-muted small mb-0">{{ 'repository.sections.cache.help'|trans }}</p>
                     </div>
-                    <span class="badge bg-label-secondary">{{ nodes|length }} éléments</span>
+                    <span class="badge bg-label-secondary">{{ 'repository.labels.node_count'|trans({'%count%': nodes|length}) }}</span>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive" style="max-height: 420px;">
                         <table class="table table-sm align-middle mb-0">
                             <thead>
                                 <tr>
-                                    <th>Chemin</th>
-                                    <th class="text-nowrap">Type</th>
-                                    <th class="text-nowrap text-end">Taille</th>
-                                    <th class="text-nowrap">Dernière synchro</th>
-                                    <th class="text-nowrap">Statut</th>
+                                    <th>{{ 'repository.labels.path'|trans }}</th>
+                                    <th class="text-nowrap">{{ 'repository.labels.type'|trans }}</th>
+                                    <th class="text-nowrap text-end">{{ 'repository.labels.size'|trans }}</th>
+                                    <th class="text-nowrap">{{ 'repository.labels.last_sync'|trans }}</th>
+                                    <th class="text-nowrap">{{ 'repository.labels.status'|trans }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -57,20 +57,20 @@
                                     <td class="font-monospace">{{ node.path }}</td>
                                     <td class="text-capitalize">{{ node.type }}</td>
                                     <td class="text-end">{{ node.size ?? '—' }}</td>
-                                    <td>{{ node.lastSyncedAt ? node.lastSyncedAt|date('Y-m-d H:i') : 'Jamais' }}</td>
+                                    <td>{{ node.lastSyncedAt ? node.lastSyncedAt|date('Y-m-d H:i') : 'repository.labels.never'|trans }}</td>
                                     <td>
                                         {% set status = node.lastSyncStatus ?? 'n/a' %}
                                         <span class="badge bg-label-{{ status == 'synced' or status == 'success' ? 'success' : 'secondary' }}">{{ status }}</span>
                                     </td>
                                 </tr>
                             {% else %}
-                                <tr><td colspan="5" class="text-center text-muted">Aucun noeud en cache pour le moment.</td></tr>
+                                <tr><td colspan="5" class="text-center text-muted">{{ 'repository.labels.no_nodes'|trans }}</td></tr>
                             {% endfor %}
                             </tbody>
                         </table>
                     </div>
                     {% if nodes|length > 50 %}
-                        <p class="text-muted small mt-2 mb-0">Affichage des 50 premiers noeuds.</p>
+                        <p class="text-muted small mt-2 mb-0">{{ 'repository.labels.first_nodes'|trans }}</p>
                     {% endif %}
                 </div>
             </div>
@@ -78,8 +78,8 @@
         <div class="col-xl-12">
             <div class="card h-100">
                 <div class="card-header pb-0">
-                    <h6 class="mb-1">Historique des synchronisations</h6>
-                    <p class="text-muted small mb-0">Dernières exécutions</p>
+                    <h6 class="mb-1">{{ 'repository.sections.logs.title'|trans }}</h6>
+                    <p class="text-muted small mb-0">{{ 'repository.sections.logs.help'|trans }}</p>
                 </div>
                 <div class="card-body">
                     {% if logs is not empty %}
@@ -103,7 +103,7 @@
                             {% endfor %}
                         </ul>
                     {% else %}
-                        <p class="text-muted mb-0">Aucune synchronisation enregistrée.</p>
+                        <p class="text-muted mb-0">{{ 'repository.labels.no_logs'|trans }}</p>
                     {% endif %}
                 </div>
             </div>

@@ -1,11 +1,11 @@
 {% extends 'layout/app.html.twig' %}
 
-{% block title %}Aucun dépôt{% endblock %}
+{% block title %}{{ 'repository.titles.none'|trans }}{% endblock %}
 
 {% block page_header %}
     <div class="mb-4">
-        <h4 class="mb-1">Dépôt non configuré</h4>
-        <p class="text-muted mb-0">Ajoutez un dépôt GitHub pour démarrer la synchronisation.</p>
+        <h4 class="mb-1">{{ 'repository.labels.not_configured'|trans }}</h4>
+        <p class="text-muted mb-0">{{ 'repository.labels.configure_hint'|trans }}</p>
     </div>
 {% endblock %}
 
@@ -13,12 +13,12 @@
     <div class="card">
         <div class="card-body text-center p-5">
             <i class="bx bx-folder-open text-primary fs-1 d-block mb-3"></i>
-            <h5 class="mb-2">Aucun dépôt suivi</h5>
-            <p class="text-muted mb-4">Demandez à un administrateur de configurer un dépôt pour pouvoir visualiser l'arborescence.</p>
+            <h5 class="mb-2">{{ 'repository.labels.no_repository'|trans }}</h5>
+            <p class="text-muted mb-4">{{ 'repository.labels.no_repository_help'|trans }}</p>
             {% if is_granted('ROLE_ADMIN') %}
                 <a class="btn btn-primary" href="{{ path('repository_index') }}">
                     <i class="bx bx-slider-alt me-2"></i>
-                    <span>Configurer un dépôt</span>
+                    <span>{{ 'repository.actions.configure'|trans }}</span>
                 </a>
             {% endif %}
         </div>

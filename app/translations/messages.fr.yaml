@@ -1,0 +1,154 @@
+app:
+  name: "RAG Manager"
+
+auth:
+  login:
+    title: "Connexion"
+    heading: "HEEEELLOOOOO 👋"
+    subtitle: "Connectez-vous pour gérer votre RAG."
+    email: "Email"
+    password: "Mot de passe"
+    remember_me: "Se souvenir de moi"
+    submit: "Se connecter"
+    connected_as: "Connecté en tant que %user%."
+
+footer:
+  tagline: "Construit avec ❤️ pour le suivi des dépôts Git."
+
+menu:
+  tree: "Arbre du RAG"
+  repository: "Configuration du dépôt"
+  users: "Utilisateurs"
+  connected: "Connecté"
+  guest: "Invité"
+  logout: "Déconnexion"
+
+form:
+  actions:
+    save: "Enregistrer"
+    reset_password: "Réinitialiser le mot de passe"
+    edit: "Modifier"
+    back_to_list: "Retour à la liste"
+    close: "Fermer"
+
+repository:
+  titles:
+    config: "Configuration du dépôt"
+    tree: "Arbre du dépôt"
+    none: "Aucun dépôt"
+  subtitles:
+    github: "Paramétrage GitHub"
+  fields:
+    owner: "Propriétaire"
+    name: "Nom du dépôt"
+    token: "Token d'accès"
+    default_branch: "Branche par défaut"
+  help:
+    token: "Personal access token avec permissions repo et contents. Stocké de façon chiffrée."
+    default_branch: "Surcharge optionnelle si le dépôt utilise une autre branche par défaut."
+  labels:
+    active: "Actif"
+    last_sync: "Dernière synchro"
+    tracked_repo: "Dépôt suivi"
+    token: "Jeton enregistré"
+    token_help: "Les tokens sont chiffrés avant d'être stockés."
+    last_message: "Dernier message"
+    no_config: "Aucune configuration enregistrée pour le moment."
+    tracking: "Suivi : %slug%"
+    status: "Statut"
+    never: "Jamais"
+    node_count: "%count% noeuds"
+    path: "Chemin"
+    type: "Type"
+    size: "Taille"
+    no_nodes: "Aucun noeud en cache pour le moment."
+    first_nodes: "Affichage des 50 premiers noeuds."
+    no_logs: "Aucune synchronisation enregistrée."
+    not_configured: "Dépôt non configuré"
+    configure_hint: "Ajoutez un dépôt GitHub pour démarrer la synchronisation."
+    no_repository: "Aucun dépôt suivi"
+    no_repository_help: "Demandez à un administrateur de configurer un dépôt pour pouvoir visualiser l'arborescence."
+    tracking_status: "Statut"
+    last_sync_at: "Dernière synchro"
+  actions:
+    sync: "Lancer une synchro"
+    configure: "Configurer un dépôt"
+  sections:
+    coordinates:
+      title: "Coordonnées GitHub"
+      help: "Définissez le dépôt utilisé par l'application et le token d'accès."
+    status:
+      title: "État de la configuration"
+      help: "Synthèse de la connexion au dépôt."
+    cache:
+      title: "Cache des noeuds"
+      help: "Liste tabulaire des entrées connues"
+    logs:
+      title: "Historique des synchronisations"
+      help: "Dernières exécutions"
+  tree:
+    title: "Visualisation de l'arbre"
+    subtitle: "Naviguez dans les dossiers et préparez vos futures actions sur chaque noeud."
+    directories: "%count% dossiers"
+    files: "%count% fichiers"
+    expand_all: "Déplier tout"
+    collapse_all: "Replier"
+    reset: "Réinitialiser"
+    helper: "Chaque noeud reste sélectionnable pour lui associer des actions ciblées."
+    details:
+      title: "Détails du noeud"
+      subtitle: "Sélectionnez un dossier ou un fichier dans l'arbre pour afficher ses métadonnées."
+  flash:
+    token_error: "Un problème est survenu avec le token fourni."
+    saved: "Configuration enregistrée. Les tokens sont masqués après la sauvegarde."
+    missing_config: "Configurez un dépôt avant de lancer une synchronisation."
+    sync_dispatched: "Synchronisation déclenchée."
+
+user:
+  titles:
+    index: "Gestion des utilisateurs"
+    new: "Créer un utilisateur"
+    edit: "Modifier %email%"
+    reset: "Réinitialiser le mot de passe de %email%"
+  subtitles:
+    manage: "Administration des comptes"
+  actions:
+    create: "Nouvel utilisateur"
+  fields:
+    email: "Email"
+    roles: "Rôles"
+    status: "Statut"
+    password: "Mot de passe"
+    password_confirm: "Confirmation du mot de passe"
+  roles:
+    admin: "Administrateur"
+    reviewer: "Editeur"
+    viewer: "Lecteur"
+    label:
+      ROLE_ADMIN: "Administrateur"
+      ROLE_REVIEWER: "Editeur"
+      ROLE_VIEWER: "Lecteur"
+      ROLE_USER: "Utilisateur"
+  status:
+    active: "Actif"
+    inactive: "Inactif"
+  labels:
+    overview: "Liste des comptes"
+    overview_help: "Gérez les rôles, statuts et mots de passe."
+    count: "utilisateurs"
+    actions: "Actions"
+    empty: "Aucun utilisateur enregistré."
+    create_details: "Informations du nouveau compte"
+    create_help: "Renseignez l'email, les rôles et le mot de passe initial."
+    edit_details: "Mettre à jour l'utilisateur"
+    edit_help: "Modifiez les rôles ou l'état du compte."
+    reset_details: "Définir un nouveau mot de passe"
+    reset_help: "Définissez un secret temporaire ou définitif pour l'utilisateur."
+  validation:
+    password_mismatch: "Les mots de passe ne correspondent pas."
+    password_required: "Merci de saisir un mot de passe."
+    password_length: "Le mot de passe doit contenir au moins 8 caractères."
+  flash:
+    created: "Utilisateur créé avec succès."
+    updated: "Utilisateur mis à jour."
+    password_reset: "Mot de passe réinitialisé."

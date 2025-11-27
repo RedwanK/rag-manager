@@ -1,15 +1,15 @@
 {% extends 'layout/app.html.twig' %}
 
-{% block title %}Configuration du dépôt{% endblock %}
+{% block title %}{{ 'repository.titles.config'|trans }}{% endblock %}
 
 {% block page_header %}
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
         <div>
-            <p class="text-muted mb-1">Paramétrage GitHub</p>
-            <h4 class="mb-0">Configuration du dépôt</h4>
+            <p class="text-muted mb-1">{{ 'repository.subtitles.github'|trans }}</p>
+            <h4 class="mb-0">{{ 'repository.titles.config'|trans }}</h4>
         </div>
         {% if config.id %}
-            <span class="badge bg-label-primary text-uppercase">Actif</span>
+            <span class="badge bg-label-primary text-uppercase">{{ 'repository.labels.active'|trans }}</span>
         {% endif %}
     </div>
 {% endblock %}
@@ -19,8 +19,8 @@
         <div class="col-xl-8">
             <div class="card">
                 <div class="card-header pb-0">
-                    <h5 class="mb-1">Coordonnées GitHub</h5>
-                    <p class="text-muted mb-0">Définissez le dépôt utilisé par l'application et le token d'accès.</p>
+                    <h5 class="mb-1">{{ 'repository.sections.coordinates.title'|trans }}</h5>
+                    <p class="text-muted mb-0">{{ 'repository.sections.coordinates.help'|trans }}</p>
                 </div>
                 <div class="card-body">
                     {{ form_start(form, {'attr': {'class': 'row g-3'}}) }}
@@ -45,9 +45,9 @@
         </div>
         <div class="col-xl-4">
             <div class="card h-100">
-                <div class="card-header pb-0">
-                    <h6 class="mb-1">État de la configuration</h6>
-                    <p class="text-muted small mb-0">Synthèse de la connexion au dépôt.</p>
+                    <div class="card-header pb-0">
+                    <h6 class="mb-1">{{ 'repository.sections.status.title'|trans }}</h6>
+                    <p class="text-muted small mb-0">{{ 'repository.sections.status.help'|trans }}</p>
                 </div>
                 <div class="card-body d-flex flex-column gap-3">
                     {% if config.id %}
@@ -56,27 +56,27 @@
                                 {{ config.lastSyncStatus ?? 'N/A' }}
                             </span>
                             <div>
-                                <div class="small text-muted">Dernière synchro</div>
-                                <div class="fw-semibold">{{ config.lastSyncAt ? config.lastSyncAt|date('Y-m-d H:i') : 'Jamais' }}</div>
+                                <div class="small text-muted">{{ 'repository.labels.last_sync'|trans }}</div>
+                                <div class="fw-semibold">{{ config.lastSyncAt ? config.lastSyncAt|date('Y-m-d H:i') : 'repository.labels.never'|trans }}</div>
                             </div>
                         </div>
                         <div>
-                            <div class="small text-muted">Dépôt suivi</div>
+                            <div class="small text-muted">{{ 'repository.labels.tracked_repo'|trans }}</div>
                             <div class="fw-semibold">{{ config.repositorySlug }}</div>
                         </div>
                         <div class="p-3 rounded bg-label-primary bg-opacity-10">
-                            <div class="small text-muted mb-1">Jeton enregistré</div>
+                            <div class="small text-muted mb-1">{{ 'repository.labels.token'|trans }}</div>
                             <div class="fw-semibold">{{ token_preview ?? '********' }}</div>
-                            <p class="text-muted small mb-0">Les tokens sont chiffrés avant d'être stockés.</p>
+                            <p class="text-muted small mb-0">{{ 'repository.labels.token_help'|trans }}</p>
                         </div>
                         {% if config.lastSyncMessage %}
                             <div class="alert alert-warning mb-0" role="alert">
-                                <div class="fw-semibold mb-1">Dernier message</div>
+                                <div class="fw-semibold mb-1">{{ 'repository.labels.last_message'|trans }}</div>
                                 <div class="small">{{ config.lastSyncMessage }}</div>
                             </div>
                         {% endif %}
                     {% else %}
-                        <p class="text-muted mb-0">Aucune configuration enregistrée pour le moment.</p>
+                        <p class="text-muted mb-0">{{ 'repository.labels.no_config'|trans }}</p>
                     {% endif %}
                 </div>
             </div>

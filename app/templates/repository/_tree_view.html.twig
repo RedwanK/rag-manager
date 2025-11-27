@@ -4,12 +4,12 @@
 
     <div class="card-header pb-0 d-flex flex-wrap justify-content-between align-items-start gap-3">
         <div>
-            <h5 class="mb-1">Visualisation de l'arbre</h5>
-            <p class="text-muted small mb-0">Naviguez dans les dossiers et préparez vos futures actions sur chaque noeud.</p>
+            <h5 class="mb-1">{{ 'repository.tree.title'|trans }}</h5>
+            <p class="text-muted small mb-0">{{ 'repository.tree.subtitle'|trans }}</p>
         </div>
         <div class="d-flex gap-2 flex-wrap">
-            <span class="badge bg-label-primary">{{ stats.directories }} dossiers</span>
-            <span class="badge bg-label-info">{{ stats.files }} fichiers</span>
+            <span class="badge bg-label-primary">{{ 'repository.tree.directories'|trans({'%count%': stats.directories}) }}</span>
+            <span class="badge bg-label-info">{{ 'repository.tree.files'|trans({'%count%': stats.files}) }}</span>
         </div>
     </div>
     <div class="card-body">
@@ -17,18 +17,18 @@
             <div class="btn-group">
                 <button class="btn btn-outline-secondary btn-sm" type="button" data-action="repository-tree#expandAll">
                     <i class="bx bx-expand"></i>
-                    <span class="ms-1">Déplier tout</span>
+                    <span class="ms-1">{{ 'repository.tree.expand_all'|trans }}</span>
                 </button>
                 <button class="btn btn-outline-secondary btn-sm" type="button" data-action="repository-tree#collapseAll">
                     <i class="bx bx-collapse"></i>
-                    <span class="ms-1">Replier</span>
+                    <span class="ms-1">{{ 'repository.tree.collapse_all'|trans }}</span>
                 </button>
                 <button class="btn btn-outline-secondary btn-sm" type="button" data-action="repository-tree#resetView">
                     <i class="bx bx-refresh"></i>
-                    <span class="ms-1">Réinitialiser</span>
+                    <span class="ms-1">{{ 'repository.tree.reset'|trans }}</span>
                 </button>
             </div>
-            <div class="text-muted small">Chaque noeud reste sélectionnable pour lui associer des actions ciblées.</div>
+            <div class="text-muted small">{{ 'repository.tree.helper'|trans }}</div>
         </div>
         <div class="row g-4">
             <div class="col-lg-12">
@@ -36,8 +36,8 @@
             </div>
             <div class="col-lg-12">
                 <div class="border rounded p-3 h-100 bg-light" data-repository-tree-target="details">
-                    <h6 class="fw-semibold mb-2">Détails du noeud</h6>
-                    <p class="text-muted mb-0">Sélectionnez un dossier ou un fichier dans l'arbre pour afficher ses métadonnées.</p>
+                    <h6 class="fw-semibold mb-2">{{ 'repository.tree.details.title'|trans }}</h6>
+                    <p class="text-muted mb-0">{{ 'repository.tree.details.subtitle'|trans }}</p>
                 </div>
             </div>
         </div>
