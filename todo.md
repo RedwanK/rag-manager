@@ -29,9 +29,9 @@
 - [x] Create `ingestion_queue_item` entity (path, branch, sha, size_bytes, storage_path, status queued|processing|indexed|failed|download_failed, source, timestamps, message, FK repo/doc/user) persisted in MySQL. #db #ingestion #rag
 - [x] Create `ingestion_log` entity linked to queue item (level info|warning|error, message, context json, created_at). #db #logs #ingestion
 - [x] Extend `document_node` with ingestion_status + last_ingested_at to surface last known ingestion state. #db #ingestion #ui
-- [ ] Add `rag_shared_dir` app config and secure path building for downloaded artifacts. #config #ops #ingestion
-- [ ] On enqueue, download file from GitHub default branch and write to `rag_shared_dir`; mark status queued or download_failed with message. #ingestion #github-sync #fs
-- [ ] Enforce duplicate protection (no re-enqueue when queued/processing) and size/extension validation with user-friendly errors. #ingestion #validation #ui
+- [x] Add `rag_shared_dir` app config and secure path building for downloaded artifacts. #config #ops #ingestion
+- [x] On enqueue, download file from GitHub default branch and write to `rag_shared_dir`; mark status queued or download_failed with message. #ingestion #github-sync #fs
+- [x] Enforce duplicate protection (no re-enqueue when queued/processing) and size/extension validation with user-friendly errors. #ingestion #validation #ui
 
 ## UI (tree/table)
 - [ ] Add “Ajouter à la file” action on files (not folders) with toast/flash feedback and role gating. #ui #ingestion #auth
