@@ -1,0 +1,150 @@
+{% extends 'layout/app.html.twig' %}
+
+{% block title %}{{ 'ingestion.logs.titles.index'|trans }}{% endblock %}
+
+{% block page_header %}
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+        <div>
+            <p class="text-muted mb-1">{{ 'ingestion.logs.subtitles.activity'|trans }}</p>
+            <h4 class="mb-0">{{ 'ingestion.logs.titles.index'|trans }}</h4>
+        </div>
+        <span class="badge bg-label-primary">{{ 'ingestion.logs.labels.results'|trans({'%count%': total}) }}</span>
+    </div>
+{% endblock %}
+
+{% block page_content %}
+    <div class="card mb-4">
+        <div class="card-header pb-0 d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h6 class="mb-1">{{ 'ingestion.logs.filters.title'|trans }}</h6>
+                <p class="text-muted small mb-0">{{ 'ingestion.logs.filters.help'|trans }}</p>
+            </div>
+            <a href="{{ path('ingestion_logs_index') }}" class="btn btn-sm btn-outline-secondary">{{ 'ingestion.logs.filters.reset'|trans }}</a>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-sm-6 col-md-3 col-lg-2">
+                    <label class="form-label">{{ 'ingestion.logs.filters.level'|trans }}</label>
+                    <select name="level" class="form-select">
+                        <option value="">—</option>
+                        {% for level in levels %}
+                            <option value="{{ level }}" {{ rawFilters.level == level ? 'selected' }}>{{ ('ingestion.logs.levels.' ~ level)|trans }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-sm-6 col-md-3 col-lg-2">
+                    <label class="form-label">{{ 'ingestion.logs.filters.status'|trans }}</label>
+                    <select name="status" class="form-select">
+                        <option value="">—</option>
+                        {% for status in statuses %}
+                            <option value="{{ status }}" {{ rawFilters.status == status ? 'selected' }}>{{ ('ingestion.status.' ~ status)|trans }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-sm-6 col-md-3 col-lg-2">
+                    <label class="form-label">{{ 'ingestion.logs.filters.date_from'|trans }}</label>
+                    <input type="date" name="date_from" value="{{ rawFilters.date_from }}" class="form-control">
+                </div>
+                <div class="col-sm-6 col-md-3 col-lg-2">
+                    <label class="form-label">{{ 'ingestion.logs.filters.date_to'|trans }}</label>
+                    <input type="date" name="date_to" value="{{ rawFilters.date_to }}" class="form-control">
+                </div>
+                <div class="col-sm-6 col-md-3 col-lg-2">
+                    <label class="form-label">{{ 'ingestion.logs.filters.path'|trans }}</label>
+                    <input type="text" name="path" value="{{ rawFilters.path }}" class="form-control" placeholder="/docs/guide.md">
+                </div>
+                <div class="col-sm-6 col-md-3 col-lg-2">
+                    <label class="form-label">{{ 'ingestion.logs.filters.user'|trans }}</label>
+                    <input type="text" name="user" value="{{ rawFilters.user }}" class="form-control" placeholder="user@example.com">
+                </div>
+                <div class="col-12 d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary">{{ 'ingestion.logs.filters.submit'|trans }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header pb-0">
+            <h6 class="mb-1">{{ 'ingestion.logs.titles.index'|trans }}</h6>
+            <p class="text-muted small mb-0">{{ 'ingestion.logs.subtitles.activity'|trans }}</p>
+        </div>
+        <div class="card-body px-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th class="text-nowrap">{{ 'ingestion.logs.table.timestamp'|trans }}</th>
+                            <th>{{ 'ingestion.logs.table.level'|trans }}</th>
+                            <th>{{ 'ingestion.logs.table.document'|trans }}</th>
+                            <th>{{ 'ingestion.logs.table.status'|trans }}</th>
+                            <th class="w-50">{{ 'ingestion.logs.table.message'|trans }}</th>
+                            <th>{{ 'ingestion.logs.table.source'|trans }}</th>
+                            <th class="text-end">{{ 'ingestion.logs.table.links'|trans }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                            {% set queueItem = log.ingestionQueueItem %}
+                            {% set levelClass = { 'info': 'info', 'warning': 'warning', 'error': 'danger' }[log.level|lower] ?? 'secondary' %}
+                            {% set statusClass = {
+                                'queued': 'warning',
+                                'processing': 'info',
+                                'indexed': 'success',
+                                'failed': 'danger',
+                                'download_failed': 'danger'
+                            }[queueItem.status] ?? 'secondary' %}
+                            <tr>
+                                <td class="text-nowrap">{{ log.createdAt ? log.createdAt|date('Y-m-d H:i') : '—' }}</td>
+                                <td><span class="badge bg-label-{{ levelClass }} text-uppercase">{{ ('ingestion.logs.levels.' ~ log.level)|trans }}</span></td>
+                                <td class="font-monospace small">
+                                    {{ queueItem.documentNode.path }}
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-column gap-1">
+                                        <span class="badge bg-label-{{ statusClass }} text-uppercase">{{ ('ingestion.status.' ~ queueItem.status)|trans }}</span>
+                                        <span class="badge bg-label-secondary text-uppercase">{{ ('ingestion.source.' ~ queueItem.source)|trans }}</span>
+                                    </div>
+                                </td>
+                                <td class="small">{{ log.message }}</td>
+                                <td class="text-capitalize">{{ ('ingestion.source.' ~ queueItem.source)|trans }}</td>
+                                <td class="text-end text-nowrap">
+                                    <div class="btn-group" role="group">
+                                        <a class="btn btn-sm btn-outline-secondary" href="{{ path('repository_tree', { path: queueItem.documentNode.path }) }}">{{ 'ingestion.logs.table.document_link'|trans }}</a>
+                                        <a class="btn btn-sm btn-outline-primary" href="{{ path('ingestion_queue_edit', {id: queueItem.id}) }}">{{ 'ingestion.logs.table.queue_link'|trans }}</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">{{ 'ingestion.logs.labels.empty'|trans }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% if pages > 1 %}
+            <div class="card-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span class="text-muted small">{{ 'ingestion.logs.labels.pagination'|trans({'%page%': page, '%pages%': pages}) }}</span>
+                <nav aria-label="{{ 'ingestion.logs.titles.index'|trans }}">
+                    <ul class="pagination pagination-sm mb-0">
+                        {% set previousPage = page - 1 %}
+                        {% set nextPage = page + 1 %}
+                        <li class="page-item {{ page == 1 ? 'disabled' }}">
+                            <a class="page-link" href="{{ path('ingestion_logs_index', rawFilters|merge({'page': previousPage})) }}" aria-label="Previous">&laquo;</a>
+                        </li>
+                        {% for number in 1..pages %}
+                            <li class="page-item {{ number == page ? 'active' }}">
+                                <a class="page-link" href="{{ path('ingestion_logs_index', rawFilters|merge({'page': number})) }}">{{ number }}</a>
+                            </li>
+                        {% endfor %}
+                        <li class="page-item {{ page >= pages ? 'disabled' }}">
+                            <a class="page-link" href="{{ path('ingestion_logs_index', rawFilters|merge({'page': nextPage})) }}" aria-label="Next">&raquo;</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

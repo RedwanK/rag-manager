@@ -25,6 +25,12 @@
                     <div>{{ 'ingestion.menu'|trans }}</div>
                 </a>
             </li>
+            <li class="menu-item {{ currentRoute starts with 'ingestion_logs_' ? 'active' }}">
+                <a href="{{ path('ingestion_logs_index') }}" class="menu-link d-flex align-items-center">
+                    {{ ux_icon('bx:history') }}&nbsp;
+                    <div>{{ 'ingestion.logs.menu'|trans }}</div>
+                </a>
+            </li>
         {% endif %}
 
         {% if is_granted('ROLE_ADMIN') %}
