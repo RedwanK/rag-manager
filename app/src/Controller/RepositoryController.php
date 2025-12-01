@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\DocumentNode;
 use App\Entity\RepositoryConfig;
 use App\Form\RepositoryConfigType;
 use App\Repository\DocumentNodeRepository;
@@ -32,7 +33,8 @@ class RepositoryController extends AbstractController
         private readonly SyncLogRepository $syncLogRepository,
         private readonly EntityManagerInterface $em,
         private readonly RepositoryTreeService $repositoryTreeService,
-        private readonly TranslatorInterface $translator
+        private readonly TranslatorInterface $translator,
+        private readonly string $githubDefaultBranch
     ) {
     }
 
@@ -89,7 +91,7 @@ class RepositoryController extends AbstractController
      */
     #[Route('/tree', name: 'tree')]
     #[IsGranted('ROLE_VIEWER')]
-    public function tree(): Response
+    public function tree(Request $request): Response
     {
         // this is temporary because we want to work with only 1 repository config at first.
         // TODO : update this to handle multi repository (maybe in Lot 3)
@@ -100,6 +102,25 @@ class RepositoryController extends AbstractController
 
         $nodes = $this->documentNodeRepository->findByRepository($config);
         $logs = $this->syncLogRepository->findBy(['repositoryConfig' => $config], ['startedAt' => 'DESC'], 10);
+        $branch = $config->getDefaultBranch() ?: $this->githubDefaultBranch;
+        $sort = $request->query->get('sort', 'ingestion');
+        $sort = in_array($sort, ['ingestion', 'size', 'name'], true) ? $sort : 'ingestion';
+
+        $cachedNodes = array_map(
+            fn (DocumentNode $node) => array_merge(
+                $this->repositoryTreeService->describeNode($node),
+                ['branch' => $branch]
+            ),
+            $nodes
+        );
+
+        usort($cachedNodes, function (array $a, array $b) use ($sort) {
+            return match ($sort) {
+                'size' => ($b['size'] ?? 0) <=> ($a['size'] ?? 0),
+                'name' => strcasecmp((string) ($a['name'] ?? ''), (string) ($b['name'] ?? '')),
+                default => ($b['ingestionDate']?->getTimestamp() ?? 0) <=> ($a['ingestionDate']?->getTimestamp() ?? 0),
+            };
+        });
 
         return $this->render('repository/tree.html.twig', [
             'config' => $config,
@@ -107,6 +128,9 @@ class RepositoryController extends AbstractController
             'logs' => $logs,
             'stats' => $this->repositoryTreeService->computeStats($nodes),
             'treeData' => $this->repositoryTreeService->buildTreeData($nodes, $config),
+            'cachedNodes' => $cachedNodes,
+            'branch' => $branch,
+            'currentSort' => $sort,
         ]);
     }
 
