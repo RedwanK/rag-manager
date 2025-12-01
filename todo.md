@@ -42,3 +42,24 @@
 ## Improvements
 - [ ] Create an extension guesser based on the name and / or path of a document to update the document type with accurate value #improvements 
 - [ ] Fix form errors when creating / editing a user. #improvements
+
+# Lot 3 Tasks
+
+## Incremental sync and data integrity
+- [ ] Implement path+repository upsert for `DocumentNode` (update metadata if present, create if missing) without purge cycles. #lot3 #github-sync #db
+- [ ] Handle GitHub deletions via Doctrine SoftDeletable (no physical DELETE) to keep `ingestion_queue_item` / `ingestion_log` references intact. #lot3 #github-sync #db
+- [ ] Preserve ingestion fields during resync (no status/timestamp resets); log per-document errors, skip to next item, and avoid dirty partial writes. #lot3 #github-sync #observability
+- [ ] Optimize sync diffing with a path hash map to detect create/update/delete and avoid bulk delete/insert loops. #lot3 #github-sync #performance
+
+## Tree UI
+- [ ] Fix tree layout to avoid horizontal clipping; use ellipsis+tooltip for long paths and keep alignment/scroll within the canvas. #lot3 #ui #ux
+- [ ] Make “Add to queue” conditional: show on indexable files in `unindexed`/`failed`/`download_failed`, provide “Retry” for failed states (re-enqueue to `queued`), hide/disable with tooltip for `queued`/`processing`/`indexed`. #lot3 #ui #ingestion
+- [ ] Add tree filters (Indexed, Indexable, Failed, All) with the selection persisted during navigation. #lot3 #ui #ingestion
+
+## Cached documents list
+- [ ] Add columns: name+extension, path, ingestion status, ingestion date (last attempt/success), size in MB (2 decimals), branch, plus enqueue action with the same state rules as the tree. #lot3 #ui #ingestion
+- [ ] Default sort by most recent ingestion; allow sort by size/name; ensure displayed status comes from the latest queue/ingestion state (not overwritten by sync). #lot3 #ui #ingestion #github-sync
+
+## Ingestion logs view
+- [ ] Create a paginated ingestion logs screen with filters: level (info|warning|error), queue status, date range, document path search, enqueuing user. #lot3 #ui #logs #ingestion
+- [ ] Display each log row with timestamp, level, document, queue item status, message, source (user/system), and links to the related queue item/document. #lot3 #ui #logs #ingestion
