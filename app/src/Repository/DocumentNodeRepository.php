@@ -6,13 +6,14 @@ use App\Entity\DocumentNode;
 use App\Entity\RepositoryConfig;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Psr\Log\LoggerInterface;
 
 /**
  * @extends ServiceEntityRepository<DocumentNode>
  */
 class DocumentNodeRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(ManagerRegistry $registry, protected LoggerInterface $logger)
     {
         parent::__construct($registry, DocumentNode::class);
     }
@@ -39,27 +40,16 @@ class DocumentNodeRepository extends ServiceEntityRepository
         }
 
         try {
-            return $this->findBy(['repositoryConfig' => $config], ['path' => 'ASC']);
+            $docs = $this->findBy(['repositoryConfig' => $config], ['path' => 'ASC']);
+        } catch (\Exception $e) {
+            $this->logger->error($e->getMessage());
+            $docs = [];
         } finally {
             if ($wasSoftDeleteEnabled) {
                 $filters->enable('softdeleteable');
             }
         }
-    }
 
-    /**
-     * @param DocumentNode[] $nodes
-     *
-     * @return array<string, DocumentNode>
-     */
-    public function indexByPath(array $nodes): array
-    {
-        $map = [];
-
-        foreach ($nodes as $node) {
-            $map[$node->getPath()] = $node;
-        }
-
-        return $map;
+        return $docs;
     }
 }

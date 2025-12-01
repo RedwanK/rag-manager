@@ -47,7 +47,7 @@ class GitHubSyncService
             $tree = $this->indexTree($this->fetchTree($config));
 
             $existingNodes = $this->documentNodeRepository->findByRepositoryIncludingDeleted($config);
-            $existingMap = $this->documentNodeRepository->indexByPath($existingNodes);
+            $existingMap = $this->indexByPath($existingNodes);
 
             foreach ($tree as $path => $item) {
                 try {
@@ -65,7 +65,7 @@ class GitHubSyncService
 
             foreach ($existingMap as $path => $node) {
                 if (!isset($tree[$path]) && $node->getDeletedAt() === null) {
-                    $node->setDeletedAt($syncedAt);
+                    $node->setDeletedAt(\DateTime::createFromImmutable($syncedAt));
                 }
             }
 
@@ -159,5 +159,21 @@ class GitHubSyncService
         }
 
         return $indexed;
+    }
+
+    /**
+     * @param DocumentNode[] $nodes
+     *
+     * @return array<string, DocumentNode>
+     */
+    private function indexByPath(array $nodes): array
+    {
+        $map = [];
+
+        foreach ($nodes as $node) {
+            $map[$node->getPath()] = $node;
+        }
+
+        return $map;
     }
 }
