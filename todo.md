@@ -46,10 +46,10 @@
 # Lot 3 Tasks
 
 ## Incremental sync and data integrity
-- [ ] Implement path+repository upsert for `DocumentNode` (update metadata if present, create if missing) without purge cycles. #lot3 #github-sync #db
-- [ ] Handle GitHub deletions via Doctrine SoftDeletable (no physical DELETE) to keep `ingestion_queue_item` / `ingestion_log` references intact. #lot3 #github-sync #db
-- [ ] Preserve ingestion fields during resync (no status/timestamp resets); log per-document errors, skip to next item, and avoid dirty partial writes. #lot3 #github-sync #observability
-- [ ] Optimize sync diffing with a path hash map to detect create/update/delete and avoid bulk delete/insert loops. #lot3 #github-sync #performance
+- [x] Implement path+repository upsert for `DocumentNode` (update metadata if present, create if missing) without purge cycles. #lot3 #github-sync #db
+- [x] Handle GitHub deletions via Doctrine SoftDeletable (no physical DELETE) to keep `ingestion_queue_item` / `ingestion_log` references intact. #lot3 #github-sync #db
+- [x] Preserve ingestion fields during resync (no status/timestamp resets); log per-document errors, skip to next item, and avoid dirty partial writes. #lot3 #github-sync #observability
+- [x] Optimize sync diffing with a path hash map to detect create/update/delete and avoid bulk delete/insert loops. #lot3 #github-sync #performance
 
 ## Tree UI
 - [ ] Fix tree layout to avoid horizontal clipping; use ellipsis+tooltip for long paths and keep alignment/scroll within the canvas. #lot3 #ui #ux
