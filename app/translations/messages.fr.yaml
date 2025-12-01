@@ -151,6 +151,41 @@ ingestion:
       enqueued: "Document ajouté à la file d'ingestion."
       deleted: "Élément supprimé."
       not_found: "Document introuvable."
+  logs:
+    menu: "Journaux d'ingestion"
+    titles:
+      index: "Journaux d'ingestion"
+    subtitles:
+      activity: "Suivi détaillé des opérations"
+    filters:
+      title: "Filtres"
+      help: "Affinez les journaux par niveau, statut de file, plage de dates ou auteur."
+      level: "Niveau"
+      status: "Statut de file"
+      date_from: "Du"
+      date_to: "Au"
+      path: "Chemin du document"
+      user: "Utilisateur"
+      submit: "Filtrer"
+      reset: "Réinitialiser"
+    table:
+      timestamp: "Horodatage"
+      level: "Niveau"
+      document: "Document"
+      status: "Statut"
+      message: "Message"
+      source: "Source"
+      links: "Liens"
+      document_link: "Document"
+      queue_link: "File"
+    labels:
+      results: "%count% journaux"
+      empty: "Aucun journal trouvé pour ces critères."
+      pagination: "Page %page% sur %pages%"
+    levels:
+      info: "Info"
+      warning: "Avertissement"
+      error: "Erreur"
   status:
     queued: "En file"
     processing: "En traitement"
