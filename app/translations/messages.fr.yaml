@@ -154,7 +154,7 @@ ingestion:
       rag_message: "Message RAG"
       storage_path: "Chemin de stockage"
     actions:
-      enqueue: "Ajouter à la file"
+      enqueue: "Ingérer"
       retry: "Réessayer"
     confirm:
       delete: "Supprimer cet élément ?"
@@ -205,7 +205,7 @@ ingestion:
     failed: "Échec"
     download_failed: "Téléchargement échoué"
     unindexed: "Non indexé"
-    cant_enqueue: "Ne peut pas être indexé"
+    cant_enqueue: "Non indexable"
   source:
     user: "Utilisateur"
     system: "Système"

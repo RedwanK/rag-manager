@@ -178,7 +178,7 @@ class RepositoryTreeService
         ];
     }
 
-    private function resolveIngestionDate(DocumentNode $node, ?IngestionQueueItem $queueItem): ?\DateTimeImmutable
+    private function resolveIngestionDate(DocumentNode $node, ?IngestionQueueItem $queueItem): \DateTimeImmutable|\DateTime|null
     {
         if ($queueItem?->getEndedAt()) {
             return $queueItem->getEndedAt();

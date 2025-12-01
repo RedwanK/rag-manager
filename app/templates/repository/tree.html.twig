@@ -56,12 +56,10 @@
                         <table class="table table-sm align-middle mb-0">
                             <thead>
                                 <tr>
+                                    <th class="text-nowrap">{{ 'repository.labels.ingestion_status'|trans }}</th>
                                     <th>{{ 'repository.labels.name'|trans }}</th>
                                     <th>{{ 'repository.labels.path'|trans }}</th>
-                                    <th class="text-nowrap">{{ 'repository.labels.branch'|trans }}</th>
                                     <th class="text-nowrap text-end">{{ 'repository.labels.size_mb'|trans }}</th>
-                                    <th class="text-nowrap">{{ 'repository.labels.ingestion_status'|trans }}</th>
-                                    <th class="text-nowrap">{{ 'repository.labels.ingestion_date'|trans }}</th>
                                     <th class="text-end text-nowrap">{{ 'repository.labels.actions'|trans }}</th>
                                 </tr>
                             </thead>
@@ -78,26 +76,26 @@
                                 %}
                                 <tr>
                                     <td>
+                                        <span class="badge bg-label-{{ badge }} text-uppercase">{{ ('ingestion.status.' ~ status)|trans }}</span>
+                                    </td>
+                                    <td>
                                         <div class="fw-semibold">{{ node.name }}</div>
                                         <div class="text-muted small">{{ node.extension ?: '—' }}</div>
                                     </td>
                                     <td class="font-monospace small">{{ node.path }}</td>
-                                    <td class="text-nowrap">{{ node.branch }}</td>
                                     <td class="text-end">{{ node.size ? ((node.size / 1024 / 1024)|number_format(2)) ~ ' Mo' : '—' }}</td>
-                                    <td>
-                                        <span class="badge bg-label-{{ badge }} text-uppercase">{{ ('ingestion.status.' ~ status)|trans }}</span>
-                                    </td>
-                                    <td class="text-nowrap">{{ node.ingestionDate ? node.ingestionDate|date('Y-m-d H:i') : 'repository.labels.never'|trans }}</td>
+                                    
                                     <td class="text-end">
-                                        {% if node.type == 'blob' %}
+                                        {% if node.type == 'blob' and node.canEnqueue %}
                                             <form method="post" action="{{ path('ingestion_queue_enqueue', {id: node.id}) }}" data-turbo="false" class="d-inline">
                                                 <input type="hidden" name="_token" value="{{ node.enqueueToken }}">
-                                                <button type="submit" class="btn btn-sm btn-primary" {{ node.canEnqueue ? '' : 'disabled' }}>
-                                                    {{ node.canEnqueue ? 'ingestion.queue.actions.enqueue'|trans : 'ingestion.queue.labels.disabled'|trans }}
+                                                <button type="submit" class="btn btn-sm btn-primary">
+                                                    {{ ux_icon('qlementine-icons:new-16') }}
+                                                    {{ 'ingestion.queue.actions.enqueue'|trans }}
                                                 </button>
                                             </form>
                                         {% else %}
-                                            <span class="text-muted small">{{ 'ingestion.queue.labels.folder_not_eligible'|trans }}</span>
+                                            <span class="text-muted small">{{ ux_icon('bx:no-entry') }}</span>
                                         {% endif %}
                                     </td>
                                 </tr>

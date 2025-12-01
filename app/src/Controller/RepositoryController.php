@@ -46,7 +46,7 @@ class RepositoryController extends AbstractController
     public function index(Request $request, GitHubRepositoryValidator $validator, TokenCipher $cipher): Response
     {
         // this is temporary because we want to work with only 1 repository config at first. 
-        // TODO : update this to handle multi repository (maybe in Lot 3)
+        // TODO : update this to handle multi repository
         $config = $this->repositoryConfigRepository->findOneBy([]) ?? new RepositoryConfig();
         $token = $config->getToken();
 
@@ -102,14 +102,12 @@ class RepositoryController extends AbstractController
 
         $nodes = $this->documentNodeRepository->findByRepository($config);
         $logs = $this->syncLogRepository->findBy(['repositoryConfig' => $config], ['startedAt' => 'DESC'], 10);
-        $branch = $config->getDefaultBranch() ?: $this->githubDefaultBranch;
         $sort = $request->query->get('sort', 'ingestion');
         $sort = in_array($sort, ['ingestion', 'size', 'name'], true) ? $sort : 'ingestion';
 
         $cachedNodes = array_map(
             fn (DocumentNode $node) => array_merge(
                 $this->repositoryTreeService->describeNode($node),
-                ['branch' => $branch]
             ),
             $nodes
         );
@@ -129,7 +127,6 @@ class RepositoryController extends AbstractController
             'stats' => $this->repositoryTreeService->computeStats($nodes),
             'treeData' => $this->repositoryTreeService->buildTreeData($nodes, $config),
             'cachedNodes' => $cachedNodes,
-            'branch' => $branch,
             'currentSort' => $sort,
         ]);
     }
