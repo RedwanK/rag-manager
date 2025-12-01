@@ -25,13 +25,41 @@ class DocumentNodeRepository extends ServiceEntityRepository
         return $this->findBy(['repositoryConfig' => $config], ['path' => 'ASC']);
     }
 
-    public function deleteForRepository(RepositoryConfig $config): void
+    /**
+     * @return DocumentNode[]
+     */
+    public function findByRepositoryIncludingDeleted(RepositoryConfig $config): array
     {
-        $this->createQueryBuilder('n')
-            ->delete()
-            ->where('n.repositoryConfig = :config')
-            ->setParameter('config', $config)
-            ->getQuery()
-            ->execute();
+        $filters = $this->getEntityManager()->getFilters();
+        $hasSoftDeleteFilter = $filters->has('softdeleteable');
+        $wasSoftDeleteEnabled = $hasSoftDeleteFilter && $filters->isEnabled('softdeleteable');
+
+        if ($wasSoftDeleteEnabled) {
+            $filters->disable('softdeleteable');
+        }
+
+        try {
+            return $this->findBy(['repositoryConfig' => $config], ['path' => 'ASC']);
+        } finally {
+            if ($wasSoftDeleteEnabled) {
+                $filters->enable('softdeleteable');
+            }
+        }
+    }
+
+    /**
+     * @param DocumentNode[] $nodes
+     *
+     * @return array<string, DocumentNode>
+     */
+    public function indexByPath(array $nodes): array
+    {
+        $map = [];
+
+        foreach ($nodes as $node) {
+            $map[$node->getPath()] = $node;
+        }
+
+        return $map;
     }
 }
