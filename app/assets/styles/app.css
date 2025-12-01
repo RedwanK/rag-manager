@@ -5,10 +5,13 @@ body {
 
 .repo-tree-canvas svg {
     width: 100%;
+    min-width: 100%;
+    display: block;
 }
 
 .repo-tree-canvas {
     min-height: 360px;
+    overflow: auto;
 }
 
 .repo-tree-canvas .link {

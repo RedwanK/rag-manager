@@ -97,6 +97,12 @@ repository:
     collapse_all: "Replier"
     reset: "Réinitialiser"
     helper: "Chaque noeud reste sélectionnable pour lui associer des actions ciblées."
+    filters:
+      label: "Filtres de l'arbre"
+      all: "Tous"
+      indexable: "Indexables"
+      indexed: "Indexés"
+      failed: "En échec"
     details:
       title: "Détails du noeud"
       subtitle: "Sélectionnez un dossier ou un fichier dans l'arbre pour afficher ses métadonnées."
@@ -123,6 +129,8 @@ ingestion:
       empty: "Aucun élément dans la file."
       none: "—"
       disabled: "Document déjà en file ou en cours."
+      in_progress: "Document déjà dans la file ou en cours de traitement."
+      indexed: "Document déjà indexé."
       folder_not_eligible: "Les dossiers ne peuvent pas être ajoutés à la file."
     fields:
       path: "Chemin"
@@ -135,6 +143,7 @@ ingestion:
       storage_path: "Chemin de stockage"
     actions:
       enqueue: "Ajouter à la file"
+      retry: "Réessayer"
     confirm:
       delete: "Supprimer cet élément ?"
     flash:

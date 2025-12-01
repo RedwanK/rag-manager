@@ -2,11 +2,18 @@ import { Controller } from '@hotwired/stimulus';
 import * as d3 from 'd3';
 
 export default class extends Controller {
-    static targets = ['canvas', 'details'];
-    static values = { tree: Object, enqueueUrlTemplate: String, translations: Object };
+    static targets = ['canvas', 'details', 'filterButton'];
+    static values = {
+        tree: Object,
+        enqueueUrlTemplate: String,
+        translations: Object,
+        filter: { type: String, default: 'all' },
+        filterStorageKey: { type: String, default: 'repository-tree-filter' }
+    };
 
     connect() {
         this.selectedNode = null;
+        this.filterValue = this.loadFilter();
         this.handleResize = this.refresh.bind(this);
         this.build();
         window.addEventListener('resize', this.handleResize);
@@ -23,7 +30,7 @@ export default class extends Controller {
 
         this.canvasTarget.innerHTML = '';
 
-        this.root = d3.hierarchy(this.parseTree(this.treeValue));
+        this.root = d3.hierarchy(this.getFilteredTree());
         this.root.x0 = 0;
         this.root.y0 = 0;
         this.root.descendants().forEach(node => {
@@ -39,6 +46,7 @@ export default class extends Controller {
 
         this.update(this.root);
         this.showDetails(this.root);
+        this.updateFilterButtons();
     }
 
     refresh() {
@@ -56,7 +64,11 @@ export default class extends Controller {
         const tree = d3.tree().size([height, width - 200]);
         tree(this.root);
 
-        this.svg.attr('width', width).attr('height', height + 40);
+        const maxNodeDepth = d3.max(nodes, d => d.y) || width;
+        const estimatedLabelWidth = d3.max(nodes, d => this.estimateLabelWidth(d.data.name)) || 0;
+        const canvasWidth = Math.max(width, maxNodeDepth + estimatedLabelWidth + 120);
+
+        this.svg.attr('width', canvasWidth).attr('height', height + 40);
 
         const node = this.g.selectAll('g.node').data(nodes, d => d.id);
 
@@ -74,11 +86,15 @@ export default class extends Controller {
             .style('fill', d => this.nodeColor(d));
 
         nodeEnter
+            .append('title')
+            .text(d => d.data.path || d.data.name || '');
+
+        nodeEnter
             .append('text')
             .attr('dy', '0.32em')
             .attr('x', d => (d.children || d._children ? -14 : 14))
             .attr('text-anchor', d => (d.children || d._children ? 'end' : 'start'))
-            .text(d => d.data.name);
+            .text(d => this.truncateLabel(d.data.name));
 
         const nodeUpdate = nodeEnter.merge(node);
 
@@ -98,7 +114,8 @@ export default class extends Controller {
         nodeUpdate
             .select('text')
             .attr('x', d => (d.children || d._children ? -14 : 14))
-            .attr('text-anchor', d => (d.children || d._children ? 'end' : 'start'));
+            .attr('text-anchor', d => (d.children || d._children ? 'end' : 'start'))
+            .text(d => this.truncateLabel(d.data.name));
 
         const nodeExit = node
             .exit()
@@ -318,14 +335,112 @@ export default class extends Controller {
         const actionUrl = data.id ? urlTemplate.replace('NODE_ID', data.id) : '';
         const disabledReason = t.disabledReason || '';
         const enqueueLabel = t.enqueueLabel || '';
+        const retryLabel = t.retryLabel || enqueueLabel;
+        const status = (data.ingestionStatus || 'unindexed').toLowerCase();
+        const statusLabels = (t.ingestion) || {};
+
+        const inactiveStatuses = ['queued', 'processing', 'indexed'];
+        if (inactiveStatuses.includes(status)) {
+            const tooltip = status === 'indexed' ? (t.indexedReason || disabledReason) : (t.inProgressReason || disabledReason);
+            return `
+                <div class="mt-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" disabled title="${this.escape(tooltip)}">
+                        ${this.escape(statusLabels[status] || status)}
+                    </button>
+                </div>
+            `;
+        }
+
+        const isIndexableStatus = ['unindexed', 'failed', 'download_failed'].includes(status);
+        if (!isIndexableStatus) {
+            return '';
+        }
+
+        const label = status === 'unindexed' ? enqueueLabel : retryLabel;
+        const tooltip = canEnqueue ? '' : disabledReason;
 
         return `
             <form method="post" action="${actionUrl}" data-turbo="false" class="mt-2">
                 <input type="hidden" name="_token" value="${this.escape(data.enqueueToken || '')}">
-                <button type="submit" class="btn btn-sm btn-primary" ${canEnqueue ? '' : 'disabled'}>
-                    ${canEnqueue ? this.escape(enqueueLabel) : this.escape(disabledReason)}
+                <button type="submit" class="btn btn-sm btn-primary" ${canEnqueue ? '' : 'disabled'} title="${this.escape(tooltip)}">
+                    ${this.escape(label)}
                 </button>
             </form>
         `;
+    }
+
+    getFilteredTree() {
+        const tree = this.parseTree(this.treeValue);
+        if (this.filterValue === 'all') {
+            return tree;
+        }
+
+        const predicate = (node) => {
+            const status = (node.ingestionStatus || 'unindexed').toLowerCase();
+            switch (this.filterValue) {
+                case 'indexed':
+                    return status === 'indexed';
+                case 'failed':
+                    return ['failed', 'download_failed'].includes(status);
+                case 'indexable':
+                    return node.type === 'blob' && node.canEnqueue && ['unindexed', 'failed', 'download_failed'].includes(status);
+                default:
+                    return true;
+            }
+        };
+
+        return this.filterTree(tree, predicate, true);
+    }
+
+    filterTree(node, predicate, isRoot = false) {
+        const children = (node.children || []).map(child => this.filterTree(child, predicate, false)).filter(Boolean);
+        const matches = predicate(node);
+
+        if (!matches && children.length === 0 && !isRoot) {
+            return null;
+        }
+
+        return { ...node, children };
+    }
+
+    setFilter(event) {
+        const filter = event.params.filter;
+        this.filterValue = filter;
+        this.saveFilter(filter);
+        this.selectedNode = null;
+        this.build();
+    }
+
+    loadFilter() {
+        const stored = window.localStorage.getItem(this.filterStorageKeyValue);
+        return stored || this.filterValue;
+    }
+
+    saveFilter(value) {
+        window.localStorage.setItem(this.filterStorageKeyValue, value);
+    }
+
+    updateFilterButtons() {
+        if (!this.hasFilterButtonTargets) return;
+        this.filterButtonTargets.forEach(button => {
+            const current = button.dataset.repositoryTreeFilterParam;
+            if (current === this.filterValue) {
+                button.classList.add('active');
+            } else {
+                button.classList.remove('active');
+            }
+        });
+    }
+
+    truncateLabel(label) {
+        if (!label) return '';
+        const maxLength = Math.max(24, Math.min(48, Math.floor((this.canvasTarget.clientWidth || 240) / 10)));
+        if (label.length <= maxLength) return label;
+        return `${label.slice(0, maxLength - 1)}…`;
+    }
+
+    estimateLabelWidth(label) {
+        if (!label) return 0;
+        return Math.min(label.length, 48) * 7 + 24;
     }
 }
