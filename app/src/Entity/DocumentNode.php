@@ -4,13 +4,17 @@ namespace App\Entity;
 
 use App\Repository\DocumentNodeRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Mapping\Annotation as Gedmo;
+use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
 
 #[ORM\Entity(repositoryClass: DocumentNodeRepository::class)]
 #[ORM\Table(name: 'document_node')]
+#[Gedmo\SoftDeleteable(fieldName: 'deletedAt')]
 class DocumentNode
 {
     use TimestampableEntity;
+    use SoftDeleteableEntity;
     
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -39,7 +43,7 @@ class DocumentNode
     #[ORM\Column(length: 64, nullable: true)]
     private ?string $lastSyncStatus = null;
 
-    #[ORM\OneToOne(mappedBy: 'documentNode', cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(mappedBy: 'documentNode', cascade: ['persist'])]
     private ?IngestionQueueItem $ingestionQueueItem = null;
 
     public function getId(): ?int
