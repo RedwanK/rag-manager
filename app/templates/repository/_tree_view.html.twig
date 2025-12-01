@@ -2,9 +2,13 @@
      data-controller="repository-tree"
      data-repository-tree-tree-value='{{ treeData|json_encode|e('html_attr') }}'
      data-repository-tree-enqueue-url-template-value="{{ path('ingestion_queue_enqueue', {id: 'NODE_ID'}) }}"
+     data-repository-tree-filter-storage-key-value="repository-tree-filter"
      data-repository-tree-translations-value='{{ {
          enqueueLabel: 'ingestion.queue.actions.enqueue'|trans,
+         retryLabel: 'ingestion.queue.actions.retry'|trans,
          disabledReason: 'ingestion.queue.labels.disabled'|trans,
+         inProgressReason: 'ingestion.queue.labels.in_progress'|trans,
+         indexedReason: 'ingestion.queue.labels.indexed'|trans,
          folderHint: 'ingestion.queue.labels.folder_not_eligible'|trans,
          ingestion: {
              queued: 'ingestion.status.queued'|trans,
@@ -51,7 +55,35 @@
                     <span class="ms-1">{{ 'repository.tree.reset'|trans }}</span>
                 </button>
             </div>
-            <div class="text-muted small">{{ 'repository.tree.helper'|trans }}</div>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <div class="btn-group" role="group" aria-label="{{ 'repository.tree.filters.label'|trans }}">
+                    <button class="btn btn-outline-primary btn-sm" type="button"
+                            data-repository-tree-target="filterButton"
+                            data-action="repository-tree#setFilter"
+                            data-repository-tree-filter-param="all">
+                        {{ 'repository.tree.filters.all'|trans }}
+                    </button>
+                    <button class="btn btn-outline-primary btn-sm" type="button"
+                            data-repository-tree-target="filterButton"
+                            data-action="repository-tree#setFilter"
+                            data-repository-tree-filter-param="indexable">
+                        {{ 'repository.tree.filters.indexable'|trans }}
+                    </button>
+                    <button class="btn btn-outline-primary btn-sm" type="button"
+                            data-repository-tree-target="filterButton"
+                            data-action="repository-tree#setFilter"
+                            data-repository-tree-filter-param="indexed">
+                        {{ 'repository.tree.filters.indexed'|trans }}
+                    </button>
+                    <button class="btn btn-outline-primary btn-sm" type="button"
+                            data-repository-tree-target="filterButton"
+                            data-action="repository-tree#setFilter"
+                            data-repository-tree-filter-param="failed">
+                        {{ 'repository.tree.filters.failed'|trans }}
+                    </button>
+                </div>
+                <div class="text-muted small">{{ 'repository.tree.helper'|trans }}</div>
+            </div>
         </div>
         <div class="row g-4">
             <div class="col-lg-12">
