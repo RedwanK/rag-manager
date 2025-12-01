@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\DocumentNode;
+use App\Entity\IngestionQueueItem;
 use App\Entity\RepositoryConfig;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
@@ -65,14 +66,7 @@ class RepositoryTreeService
         foreach ($nodes as $node) {
             // Split the stored "path" (like src/Controller/Foo.php) into hierarchical segments
             $segments = array_values(array_filter(explode('/', $node->getPath()), static fn ($segment) => $segment !== ''));
-            $queueItem = $node->getIngestionQueueItem();
-            $ingestionStatus = $queueItem?->getStatus();
-            $canEnqueue = true;
-            try {
-                $this->ingestionQueueManager->assertCanEnqueue($node);
-            } catch (\Exception $e) {
-                $canEnqueue = false; 
-            }
+            $meta = $this->buildNodeMeta($node);
 
             $cursor = &$root;
             $currentPath = [];
@@ -92,9 +86,9 @@ class RepositoryTreeService
                         'size' => $node->getSize(),
                         'lastSyncedAt' => $node->getLastSyncedAt()?->format(\DATE_ATOM),
                         'lastSyncStatus' => $node->getLastSyncStatus(),
-                        'ingestionStatus' => $ingestionStatus,
-                        'enqueueToken' => $this->csrfTokenManager->getToken('enqueue' . $node->getId())->getValue(),
-                        'canEnqueue' => $canEnqueue,
+                        'ingestionStatus' => $meta['ingestionStatus'],
+                        'enqueueToken' => $meta['enqueueToken'],
+                        'canEnqueue' => $meta['canEnqueue'],
                     ];
                     continue;
                 }
@@ -117,7 +111,7 @@ class RepositoryTreeService
                         'children' => [],
                         'lastSyncedAt' => $node->getLastSyncedAt()?->format(\DATE_ATOM),
                         'lastSyncStatus' => $node->getLastSyncStatus(),
-                        'ingestionStatus' => $ingestionStatus,
+                        'ingestionStatus' => $meta['ingestionStatus'],
                         'enqueueToken' => null,
                         'canEnqueue' => false,
                     ];
@@ -135,5 +129,73 @@ class RepositoryTreeService
         }
 
         return $root;
+    }
+
+    /**
+     * Prepare a flat representation of a node with ingestion metadata for listings.
+     */
+    public function describeNode(DocumentNode $node): array
+    {
+        $meta = $this->buildNodeMeta($node);
+        $pathInfo = pathinfo($node->getPath());
+
+        return [
+            'id' => $node->getId(),
+            'path' => $node->getPath(),
+            'name' => $pathInfo['basename'] ?? $node->getPath(),
+            'extension' => $pathInfo['extension'] ?? '',
+            'type' => $node->getType(),
+            'size' => $node->getSize(),
+            'ingestionStatus' => $meta['ingestionStatus'],
+            'ingestionDate' => $meta['ingestionDate'],
+            'canEnqueue' => $meta['canEnqueue'],
+            'enqueueToken' => $meta['enqueueToken'],
+        ];
+    }
+
+    /**
+     * Build ingestion metadata used by both the tree and the cached list.
+     */
+    private function buildNodeMeta(DocumentNode $node): array
+    {
+        $queueItem = $node->getIngestionQueueItem();
+        $ingestionStatus = $queueItem?->getStatus() ?? 'unindexed';
+
+        $canEnqueue = $node->getType() !== self::NODE_TYPE_DIRECTORY;
+        if ($canEnqueue) {
+            try {
+                $this->ingestionQueueManager->assertCanEnqueue($node);
+            } catch (\Exception $e) {
+                $canEnqueue = false;
+            }
+        }
+
+        return [
+            'ingestionStatus' => $ingestionStatus,
+            'ingestionDate' => $this->resolveIngestionDate($node, $queueItem),
+            'enqueueToken' => $node->getType() === self::NODE_TYPE_DIRECTORY ? null : $this->csrfTokenManager->getToken('enqueue' . $node->getId())->getValue(),
+            'canEnqueue' => $canEnqueue,
+        ];
+    }
+
+    private function resolveIngestionDate(DocumentNode $node, ?IngestionQueueItem $queueItem): \DateTimeImmutable|\DateTime|null
+    {
+        if ($queueItem?->getEndedAt()) {
+            return $queueItem->getEndedAt();
+        }
+
+        if ($queueItem?->getStartedAt()) {
+            return $queueItem->getStartedAt();
+        }
+
+        if ($queueItem?->getUpdatedAt()) {
+            return $queueItem->getUpdatedAt();
+        }
+
+        if ($queueItem?->getCreatedAt()) {
+            return $queueItem->getCreatedAt();
+        }
+
+        return $node->getUpdatedAt() ?? $node->getCreatedAt();
     }
 }

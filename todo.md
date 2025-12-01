@@ -40,7 +40,7 @@
 - [ ] Provide retry/re-index action for failed/download_failed items (creates/reuses queue item with audit of user). #ui #ingestion
 
 ## Improvements
-- [ ] Create an extension guesser based on the name and / or path of a document to update the document type with accurate value #improvements 
+- [x] Create an extension guesser based on the name and / or path of a document to update the document type with accurate value #improvements 
 - [ ] Fix form errors when creating / editing a user. #improvements
 
 # Lot 3 Tasks
@@ -57,8 +57,8 @@
 - [x] Add tree filters (Indexed, Indexable, Failed, All) with the selection persisted during navigation. #lot3 #ui #ingestion
 
 ## Cached documents list
-- [ ] Add columns: name+extension, path, ingestion status, ingestion date (last attempt/success), size in MB (2 decimals), branch, plus enqueue action with the same state rules as the tree. #lot3 #ui #ingestion
-- [ ] Default sort by most recent ingestion; allow sort by size/name; ensure displayed status comes from the latest queue/ingestion state (not overwritten by sync). #lot3 #ui #ingestion #github-sync
+- [x] Add columns: name+extension, path, ingestion status, ingestion date (last attempt/success), size in MB (2 decimals), branch, plus enqueue action with the same state rules as the tree. #lot3 #ui #ingestion
+- [x] Default sort by most recent ingestion; allow sort by size/name; ensure displayed status comes from the latest queue/ingestion state (not overwritten by sync). #lot3 #ui #ingestion #github-sync
 
 ## Ingestion logs view
 - [x] Create a paginated ingestion logs screen with filters: level (info|warning|error), queue status, date range, document path search, enqueuing user. #lot3 #ui #logs #ingestion

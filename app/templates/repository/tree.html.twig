@@ -37,41 +37,74 @@
                         <h6 class="mb-1">{{ 'repository.sections.cache.title'|trans }}</h6>
                         <p class="text-muted small mb-0">{{ 'repository.sections.cache.help'|trans }}</p>
                     </div>
-                    <span class="badge bg-label-secondary">{{ 'repository.labels.node_count'|trans({'%count%': nodes|length}) }}</span>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <div class="btn-group btn-group-sm" role="group" aria-label="{{ 'repository.labels.sort_by'|trans }}">
+                            {% set sortOptions = {
+                                'ingestion': 'repository.labels.sort.ingestion'|trans,
+                                'size': 'repository.labels.sort.size'|trans,
+                                'name': 'repository.labels.sort.name'|trans,
+                            } %}
+                            {% for key, label in sortOptions %}
+                                <a class="btn btn-outline-secondary {{ currentSort == key ? 'active' : '' }}" href="{{ path('repository_tree', {sort: key}) }}">{{ label }}</a>
+                            {% endfor %}
+                        </div>
+                        <span class="badge bg-label-secondary">{{ 'repository.labels.node_count'|trans({'%count%': cachedNodes|length}) }}</span>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive" style="max-height: 420px;">
                         <table class="table table-sm align-middle mb-0">
                             <thead>
                                 <tr>
+                                    <th class="text-nowrap">{{ 'repository.labels.ingestion_status'|trans }}</th>
+                                    <th>{{ 'repository.labels.name'|trans }}</th>
                                     <th>{{ 'repository.labels.path'|trans }}</th>
-                                    <th class="text-nowrap">{{ 'repository.labels.type'|trans }}</th>
-                                    <th class="text-nowrap text-end">{{ 'repository.labels.size'|trans }}</th>
-                                    <th class="text-nowrap">{{ 'repository.labels.last_sync'|trans }}</th>
-                                    <th class="text-nowrap">{{ 'repository.labels.status'|trans }}</th>
+                                    <th class="text-nowrap text-end">{{ 'repository.labels.size_mb'|trans }}</th>
+                                    <th class="text-end text-nowrap">{{ 'repository.labels.actions'|trans }}</th>
                                 </tr>
                             </thead>
                             <tbody>
-                            {% for node in nodes|slice(0, 50) %}
+                            {% for node in cachedNodes %}
+                                {% set status = (node.ingestionStatus ?? 'unindexed')|lower %}
+                                {% if status == 'unindexed' and not node.canEnqueue %}
+                                    {% set status = 'cant_enqueue' %}
+                                {% endif %}
+                                {% set badge =
+                                    status in ['failed', 'download_failed'] ? 'danger' :
+                                    (status in ['queued', 'processing'] ? 'warning' :
+                                        (status == 'indexed' ? 'success' : (status == 'cant_enqueue' ? 'secondary' : 'info')))
+                                %}
                                 <tr>
-                                    <td class="font-monospace">{{ node.path }}</td>
-                                    <td class="text-capitalize">{{ node.type }}</td>
-                                    <td class="text-end">{{ node.size ?? '—' }}</td>
-                                    <td>{{ node.lastSyncedAt ? node.lastSyncedAt|date('Y-m-d H:i') : 'repository.labels.never'|trans }}</td>
                                     <td>
-                                        {% set status = node.lastSyncStatus ?? 'n/a' %}
-                                        <span class="badge bg-label-{{ status == 'synced' or status == 'success' ? 'success' : 'secondary' }}">{{ status }}</span>
+                                        <span class="badge bg-label-{{ badge }} text-uppercase">{{ ('ingestion.status.' ~ status)|trans }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold">{{ node.name }}</div>
+                                        <div class="text-muted small">{{ node.extension ?: '—' }}</div>
+                                    </td>
+                                    <td class="font-monospace small">{{ node.path }}</td>
+                                    <td class="text-end">{{ node.size ? ((node.size / 1024 / 1024)|number_format(2)) ~ ' Mo' : '—' }}</td>
+                                    
+                                    <td class="text-end">
+                                        {% if node.type == 'blob' and node.canEnqueue %}
+                                            <form method="post" action="{{ path('ingestion_queue_enqueue', {id: node.id}) }}" data-turbo="false" class="d-inline">
+                                                <input type="hidden" name="_token" value="{{ node.enqueueToken }}">
+                                                <button type="submit" class="btn btn-sm btn-primary">
+                                                    {{ ux_icon('qlementine-icons:new-16') }}
+                                                    {{ 'ingestion.queue.actions.enqueue'|trans }}
+                                                </button>
+                                            </form>
+                                        {% else %}
+                                            <span class="text-muted small">{{ ux_icon('bx:no-entry') }}</span>
+                                        {% endif %}
                                     </td>
                                 </tr>
                             {% else %}
-                                <tr><td colspan="5" class="text-center text-muted">{{ 'repository.labels.no_nodes'|trans }}</td></tr>
+                                <tr><td colspan="7" class="text-center text-muted">{{ 'repository.labels.no_nodes'|trans }}</td></tr>
                             {% endfor %}
                             </tbody>
                         </table>
                     </div>
-                    {% if nodes|length > 50 %}
-                        <p class="text-muted small mt-2 mb-0">{{ 'repository.labels.first_nodes'|trans }}</p>
-                    {% endif %}
                 </div>
             </div>
         </div>

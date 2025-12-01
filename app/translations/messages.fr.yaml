@@ -61,6 +61,13 @@ repository:
     never: "Jamais"
     node_count: "%count% noeuds"
     path: "Chemin"
+    name: "Nom"
+    extension: "Extension"
+    branch: "Branche"
+    actions: "Actions"
+    ingestion_status: "Statut d'ingestion"
+    ingestion_date: "Dernière ingestion"
+    size_mb: "Taille (Mo)"
     type: "Type"
     size: "Taille"
     no_nodes: "Aucun noeud en cache pour le moment."
@@ -72,6 +79,11 @@ repository:
     no_repository_help: "Demandez à un administrateur de configurer un dépôt pour pouvoir visualiser l'arborescence."
     tracking_status: "Statut"
     last_sync_at: "Dernière synchro"
+    sort_by: "Trier par"
+    sort:
+      ingestion: "Ingestion récente"
+      size: "Taille"
+      name: "Nom"
   actions:
     sync: "Lancer une synchro"
     configure: "Configurer un dépôt"
@@ -142,7 +154,7 @@ ingestion:
       rag_message: "Message RAG"
       storage_path: "Chemin de stockage"
     actions:
-      enqueue: "Ajouter à la file"
+      enqueue: "Ingérer"
       retry: "Réessayer"
     confirm:
       delete: "Supprimer cet élément ?"
@@ -193,7 +205,7 @@ ingestion:
     failed: "Échec"
     download_failed: "Téléchargement échoué"
     unindexed: "Non indexé"
-    cant_enqueue: "Ne peut pas être indexé"
+    cant_enqueue: "Non indexable"
   source:
     user: "Utilisateur"
     system: "Système"
