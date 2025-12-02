@@ -29,6 +29,7 @@ class LightRagClient
             'json' => [
                 'query' => $prompt,
                 'history' => $history,
+                'mode' => 'mix'
             ],
             'timeout' => $this->lightRagTimeout,
         ]);

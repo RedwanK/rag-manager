@@ -23,7 +23,7 @@ class ChatStreamController extends AbstractController
     }
 
     #[Route('/{conversationId}/{messageId}', name: 'stream', methods: ['GET'])]
-    public function stream(int $conversationId, int $messageId): StreamedResponse
+    public function streamConversation(int $conversationId, int $messageId): StreamedResponse
     {
         $conversation = $this->conversationRepository->findOwnedById($conversationId, $this->getUser());
         if (!$conversation) {

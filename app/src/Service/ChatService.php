@@ -48,7 +48,6 @@ class ChatService
     public function renameConversation(Conversation $conversation, string $title): Conversation
     {
         $conversation->setTitle($title);
-        $conversation->setUpdatedAt(new DateTimeImmutable());
 
         $this->em->flush();
 
@@ -57,7 +56,7 @@ class ChatService
 
     public function deleteConversation(Conversation $conversation): void
     {
-        $conversation->setDeletedAt(new DateTimeImmutable());
+        $conversation->setDeletedAt(new \DateTime());
         $this->em->flush();
     }
 
@@ -169,7 +168,7 @@ class ChatService
             $duration = (int) ((microtime(true) - $start) * 1000);
             $log->setDurationMs($duration);
             $this->em->flush();
-            $emit('done');
+            $emit('done', null);
         }
     }
 
