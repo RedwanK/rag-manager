@@ -94,3 +94,6 @@
 ## Observability & metrics
 - [ ] Log each LightRag request with conversation_id, message_id, user_id, duration, status/error for dashboards. #lot4 #observability
 - [ ] Capture token counts/cost metrics if exposed by LightRag and store on assistant messages for later reporting. #lot4 #observability #rag
+
+## Prepare prod deployement
+- [ ] Configure monolog and other necessary services for prod environment #prod-env !high
