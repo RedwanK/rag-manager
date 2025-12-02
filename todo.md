@@ -63,3 +63,34 @@
 ## Ingestion logs view
 - [x] Create a paginated ingestion logs screen with filters: level (info|warning|error), queue status, date range, document path search, enqueuing user. #lot3 #ui #logs #ingestion
 - [x] Display each log row with timestamp, level, document, queue item status, message, source (user/system), and links to the related queue item/document. #lot3 #ui #logs #ingestion
+
+# Lot 4 Tasks
+
+## Data model & persistence
+- [ ] Add `conversation` table/entity (id UUID/int, user_id FK, title, created_at/updated_at/last_activity_at, deleted_at nullable) with per-user scoping. #lot4 #db #chat
+- [ ] Add `conversation_message` table/entity (conversation_id FK, role user|assistant|system, content text/json, source_documents json nullable, token_count nullable, status streaming|completed|error, error_message nullable, created_at, streamed_at, finished_at) ordered by created_at. #lot4 #db #chat
+- [ ] Add `light_rag_request_log` table/entity linking conversation/message/user with duration_ms, status success|error|cancelled, error_message, created_at for observability. #lot4 #db #observability
+
+## Backend chat flow
+- [ ] Expose REST endpoints to create/list conversations (per current user), fetch thread messages, soft delete/archive, and rename title (auto-generate from first prompt fallback). #lot4 #backend #chat
+- [ ] Implement send-prompt endpoint: persist user message, load latest N history messages, call LightRag `/query/stream`, and create assistant message in `streaming` status. #lot4 #backend #rag
+- [ ] Build Symfony SSE endpoint (e.g., `/sse/chat/{conversationId}/{messageId}`) that consumes LightRag streaming and forwards `token|sources|done|error` events with keep-alives. #lot4 #backend #sse
+- [ ] Handle cancellation: stop downstream stream, mark assistant message as `error` with reason `cancelled_by_user`, and emit terminal SSE event. #lot4 #backend #sse
+- [ ] Apply per-user rate limiting on prompt submission to prevent API flooding; return friendly error on limit hit. #lot4 #backend #security
+
+## UI/UX chat
+- [ ] Create chat workspace with left conversation list (title, last activity, unread/error indicator, “Nouvelle discussion” CTA) and right thread view with message bubbles + avatars. #lot4 #ui #chat
+- [ ] Display streaming assistant message live; lock send button while in-flight; show token counter/spinner and replace buffer on `done`. #lot4 #ui #sse
+- [ ] Surface errors inline on the thread with retry (resend last prompt) and cancellation control; prevent double-submit (debounce). #lot4 #ui #ux
+- [ ] Show citations/sources if provided in SSE `sources` event; render timestamps on messages. #lot4 #ui #rag
+- [ ] Empty state for no conversations with guidance and CTA to start a discussion. #lot4 #ui #ux
+
+## Security, isolation, and rules
+- [ ] Enforce that users only see their own conversations/messages; gate chat access to authenticated users regardless of role. #lot4 #security
+- [ ] Respect soft-delete: exclude archived conversations from list; keep data for audit unless hard delete is added later. #lot4 #backend #ux
+- [ ] Enforce ordering and context cap (e.g., last 20 messages) when building history for LightRag to avoid oversized payloads. #lot4 #backend #rag
+- [ ] Apply timeout for LightRag stream (e.g., 60s); on timeout, mark message `error`, persist reason, emit SSE error, and keep last known content. #lot4 #backend #observability
+
+## Observability & metrics
+- [ ] Log each LightRag request with conversation_id, message_id, user_id, duration, status/error for dashboards. #lot4 #observability
+- [ ] Capture token counts/cost metrics if exposed by LightRag and store on assistant messages for later reporting. #lot4 #observability #rag
