@@ -45,6 +45,7 @@ security:
     # Note: Only the *first* matching rule is applied
     access_control:
         - { path: ^/(login|logout)$, roles: PUBLIC_ACCESS }
+        - { path: ^/(api/chat|sse/chat), roles: ROLE_USER }
         - { path: ^/repository/sync, roles: ROLE_EDITOR }
         - { path: ^/repository/tree, roles: ROLE_VIEWER }
         - { path: ^/repository, roles: ROLE_ADMIN }
