@@ -22,6 +22,7 @@ menu:
   connected: "Connecté"
   guest: "Invité"
   logout: "Déconnexion"
+  chat: "Discussions"
 
 form:
   actions:
@@ -126,6 +127,46 @@ repository:
 
 csrf:
   invalid: "Jeton CSRF invalide."
+
+chat:
+  title: "Assistant RAG"
+  lead: "Vos échanges restent privés et sécurisés."
+  helper: "Lancez une discussion pour questionner vos contenus indexés."
+  badges:
+    secure: "Connexion sécurisée"
+    live: "Streaming en direct"
+  sidebar:
+    title: "Conversations"
+    subtitle: "Historique et nouveaux fils"
+    new: "Nouvelle discussion"
+    empty:
+      title: "Aucune conversation"
+      helper: "Démarrez un fil pour retrouver vos prochaines réponses."
+  thread:
+    title: "Fil de discussion"
+    placeholder: "Sélectionnez une conversation pour afficher les messages."
+    empty:
+      title: "Aucun message encore"
+      helper: "Envoyez votre première question pour démarrer la conversation."
+    disclaimer: "Les réponses peuvent contenir des approximations. Vérifiez toujours les sources."
+    last_activity: "Dernière activité :"
+  actions:
+    send: "Envoyer"
+    retry: "Réessayer"
+    cancel: "Annuler"
+    placeholder: "Décrivez votre question ou votre besoin..."
+  streaming:
+    tokens: "tokens"
+  roles:
+    user: "Vous"
+    assistant: "Assistant"
+  errors:
+    title: "Une erreur est survenue"
+    generic: "Une erreur est survenue lors de la génération."
+    cancelled: "Génération annulée."
+  sources:
+    title: "Sources"
+    item: "Source"
 
 ingestion:
   menu: "File d'ingestion"

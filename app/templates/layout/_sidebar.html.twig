@@ -18,6 +18,13 @@
             </a>
         </li>
 
+        <li class="menu-item {{ currentRoute starts with 'chat_ui_' ? 'active' }}">
+            <a href="{{ path('chat_ui_index') }}" class="menu-link d-flex align-items-center">
+                {{ ux_icon('bx:chat') }}&nbsp;
+                <div>{{ 'menu.chat'|trans }}</div>
+            </a>
+        </li>
+
         {% if is_granted('ROLE_EDITOR') %}
             <li class="menu-item {{ currentRoute starts with 'ingestion_queue_' ? 'active' }}">
                 <a href="{{ path('ingestion_queue_index') }}" class="menu-link d-flex align-items-center">
