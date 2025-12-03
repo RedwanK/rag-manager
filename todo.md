@@ -72,11 +72,11 @@
 - [ ] Add `light_rag_request_log` table/entity linking conversation/message/user with duration_ms, status success|error|cancelled, error_message, created_at for observability. #lot4 #db #observability
 
 ## Backend chat flow
-- [ ] Expose REST endpoints to create/list conversations (per current user), fetch thread messages, soft delete/archive, and rename title (auto-generate from first prompt fallback). #lot4 #backend #chat
-- [ ] Implement send-prompt endpoint: persist user message, load latest N history messages, call LightRag `/query/stream`, and create assistant message in `streaming` status. #lot4 #backend #rag
-- [ ] Build Symfony SSE endpoint (e.g., `/sse/chat/{conversationId}/{messageId}`) that consumes LightRag streaming and forwards `token|sources|done|error` events with keep-alives. #lot4 #backend #sse
-- [ ] Handle cancellation: stop downstream stream, mark assistant message as `error` with reason `cancelled_by_user`, and emit terminal SSE event. #lot4 #backend #sse
-- [ ] Apply per-user rate limiting on prompt submission to prevent API flooding; return friendly error on limit hit. #lot4 #backend #security
+- [x] Expose REST endpoints to create/list conversations (per current user), fetch thread messages, soft delete/archive, and rename title (auto-generate from first prompt fallback). #lot4 #backend #chat
+- [x] Implement send-prompt endpoint: persist user message, load latest N history messages, call LightRag `/query/stream`, and create assistant message in `streaming` status. #lot4 #backend #rag
+- [x] Build Symfony SSE endpoint (e.g., `/sse/chat/{conversationId}/{messageId}`) that consumes LightRag streaming and forwards `token|sources|done|error` events with keep-alives. #lot4 #backend #sse
+- [x] Handle cancellation: stop downstream stream, mark assistant message as `error` with reason `cancelled_by_user`, and emit terminal SSE event. #lot4 #backend #sse
+- [x] Apply per-user rate limiting on prompt submission to prevent API flooding; return friendly error on limit hit. #lot4 #backend #security
 
 ## UI/UX chat
 - [ ] Create chat workspace with left conversation list (title, last activity, unread/error indicator, “Nouvelle discussion” CTA) and right thread view with message bubbles + avatars. #lot4 #ui #chat
