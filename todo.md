@@ -67,9 +67,9 @@
 # Lot 4 Tasks
 
 ## Data model & persistence
-- [ ] Add `conversation` table/entity (id UUID/int, user_id FK, title, created_at/updated_at/last_activity_at, deleted_at nullable) with per-user scoping. #lot4 #db #chat
-- [ ] Add `conversation_message` table/entity (conversation_id FK, role user|assistant|system, content text/json, source_documents json nullable, token_count nullable, status streaming|completed|error, error_message nullable, created_at, streamed_at, finished_at) ordered by created_at. #lot4 #db #chat
-- [ ] Add `light_rag_request_log` table/entity linking conversation/message/user with duration_ms, status success|error|cancelled, error_message, created_at for observability. #lot4 #db #observability
+- [x] Add `conversation` table/entity (id UUID/int, user_id FK, title, created_at/updated_at/last_activity_at, deleted_at nullable) with per-user scoping. #lot4 #db #chat
+- [x] Add `conversation_message` table/entity (conversation_id FK, role user|assistant|system, content text/json, source_documents json nullable, token_count nullable, status streaming|completed|error, error_message nullable, created_at, streamed_at, finished_at) ordered by created_at. #lot4 #db #chat
+- [x] Add `light_rag_request_log` table/entity linking conversation/message/user with duration_ms, status success|error|cancelled, error_message, created_at for observability. #lot4 #db #observability
 
 ## Backend chat flow
 - [x] Expose REST endpoints to create/list conversations (per current user), fetch thread messages, soft delete/archive, and rename title (auto-generate from first prompt fallback). #lot4 #backend #chat
