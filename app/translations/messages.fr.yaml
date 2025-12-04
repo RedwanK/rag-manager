@@ -129,6 +129,14 @@ csrf:
   invalid: "Jeton CSRF invalide."
 
 chat:
+  menu:
+    all: "Toutes les discussions"
+    recent: "Récentes"
+  table:
+    title: "Titre"
+    last_activity: "Dernière activité"
+    created_at: "Créée le"
+    actions: "Actions"
   title: "Assistant RAG"
   lead: "Vos échanges restent privés et sécurisés."
   helper: "Lancez une discussion pour questionner vos contenus indexés."
@@ -155,6 +163,7 @@ chat:
     retry: "Réessayer"
     cancel: "Annuler"
     placeholder: "Décrivez votre question ou votre besoin..."
+    open: "Ouvrir"
   streaming:
     tokens: "tokens"
   roles:

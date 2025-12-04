@@ -25,17 +25,21 @@ export default class extends Controller {
         streamUrl: String,
         createConversationUrl: String,
         initialConversations: Array,
+        activeConversationId: Number,
     };
 
     connect() {
         this.conversations = this.initialConversationsValue || [];
-        this.activeConversationId = null;
+        this.activeConversationId = this.hasActiveConversationIdValue ? this.activeConversationIdValue : null;
         this.lastPrompt = '';
         this.isSending = false;
         this.streamSource = null;
         this.streamingMessageId = null;
 
         this.renderConversations();
+        if (this.activeConversationId) {
+            this.selectConversation(this.activeConversationId);
+        }
         this.refreshConversations();
     }
 
@@ -54,7 +58,9 @@ export default class extends Controller {
             this.conversations = data.map((conversation) => ({ ...conversation }));
             this.renderConversations();
 
-            if (!this.activeConversationId && this.conversations.length > 0) {
+            if (this.activeConversationId && this.conversations.some((c) => c.id === this.activeConversationId)) {
+                this.selectConversation(this.activeConversationId);
+            } else if (!this.activeConversationId && this.conversations.length > 0) {
                 this.selectConversation(this.conversations[0].id);
             }
 
@@ -265,19 +271,20 @@ export default class extends Controller {
         const timestamp = message.finishedAt || message.streamedAt || message.createdAt;
         const statusBadge = this.messageStatusBadge(message);
         const sources = this.renderSources(message.sourceDocuments);
+        const format = message.format || 'markdown';
 
         return `
-            <div class="d-flex gap-3 mb-4 ${alignment}">
+            <div class="d-flex gap-3 mb-4 ${alignment}" data-format="${format}">
                 <div class="avatar ${isUser ? 'bg-primary text-white' : 'bg-label-secondary text-muted'}">
                     <span>${this.icon(icon)}</span>
                 </div>
                 <div class="flex-grow-1">
-                    <div class="chat-bubble ${bubbleClass} ${message.status === 'error' ? 'border border-danger' : ''}" data-message-id="${message.id}">
+                    <div class="chat-bubble ${bubbleClass} ${message.status === 'error' ? 'border border-danger' : ''}" data-message-id="${message.id}" data-format="${format}">
                         <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
                             <span class="fw-semibold">${isUser ? this.translate('chat.roles.user') : this.translate('chat.roles.assistant')}</span>
                             <small class="text-muted">${this.formatTimestamp(timestamp)}</small>
                         </div>
-                        <div class="chat-message-content">${this.escape(message.content || (message.status === 'streaming' ? this.translate('chat.streaming.waiting') : ''))}</div>
+                        <div class="chat-message-content" data-raw="${this.escapeAttribute(message.content || '')}">${this.renderMessageContent(message.content || (message.status === 'streaming' ? this.translate('chat.streaming.waiting') : ''), format)}</div>
                         ${sources}
                         ${statusBadge}
                     </div>
@@ -359,6 +366,8 @@ export default class extends Controller {
                 body: JSON.stringify({ prompt }),
             });
 
+            console.log(response);
+
             if (!response.ok) {
                 const errorPayload = await response.json().catch(() => ({}));
                 const message = errorPayload.message || this.translate('chat.errors.generic');
@@ -401,6 +410,7 @@ export default class extends Controller {
             id: Date.now(),
             role: 'user',
             content,
+            format: 'markdown',
             status: 'completed',
             createdAt: new Date().toISOString(),
             finishedAt: new Date().toISOString(),
@@ -417,6 +427,7 @@ export default class extends Controller {
             id: messageId,
             role: 'assistant',
             content: '',
+            format: 'markdown',
             status: 'streaming',
             createdAt: new Date().toISOString(),
         };
@@ -428,6 +439,7 @@ export default class extends Controller {
         const streamUrl = this.streamUrlValue.replace('/0/0', `/${this.activeConversationId}/${messageId}`);
         this.tokenCountTarget.textContent = '0';
         let tokens = 0;
+        let streamCompleted = false;
 
         this.streamSource = new EventSource(streamUrl);
 
@@ -444,16 +456,23 @@ export default class extends Controller {
         });
 
         this.streamSource.addEventListener('error', (event) => {
+            if (streamCompleted) {
+                return;
+            }
             const data = this.safeParse(event.data);
             const message = data?.message || this.translate('chat.errors.generic');
             this.handleStreamError(messageId, message);
         });
 
         this.streamSource.addEventListener('done', () => {
+            streamCompleted = true;
             this.handleStreamCompletion(messageId);
         });
 
         this.streamSource.onerror = () => {
+            if (streamCompleted || (this.streamSource && this.streamSource.readyState === EventSource.CLOSED)) {
+                return;
+            }
             this.handleStreamError(messageId, this.translate('chat.errors.generic'));
         };
     }
@@ -467,7 +486,11 @@ export default class extends Controller {
         if (!content) {
             return;
         }
-        content.innerHTML += this.escape(text);
+        const current = content.getAttribute('data-raw') || '';
+        const next = `${current}${text}`;
+        content.setAttribute('data-raw', next);
+        const format = bubble.dataset.format || 'markdown';
+        content.innerHTML = this.renderMessageContent(next, format);
         bubble.classList.add('chat-bubble-assistant-active');
         this.threadTarget.scrollTop = this.threadTarget.scrollHeight;
     }
@@ -511,6 +534,11 @@ export default class extends Controller {
         if (!bubble) {
             this.renderError(message);
             return;
+        }
+
+        const content = bubble.querySelector('.chat-message-content');
+        if (content && (content.getAttribute('data-raw') || '').trim() !== '') {
+            // If we already received content, avoid overriding with empty error; just show banner.
         }
 
         bubble.classList.add('border', 'border-danger');
@@ -617,6 +645,43 @@ export default class extends Controller {
         const div = document.createElement('div');
         div.textContent = value ?? '';
         return div.innerHTML;
+    }
+
+    escapeAttribute(value) {
+        const div = document.createElement('div');
+        div.textContent = value ?? '';
+        return div.innerHTML.replace(/"/g, '&quot;');
+    }
+
+    renderMessageContent(value, format = 'markdown') {
+        const text = value || '';
+        if (format !== 'markdown') {
+            return this.escape(text);
+        }
+
+        // Minimal Markdown rendering: headings, bold/italic, code, lists, line breaks.
+        let html = this.escape(text);
+        html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+        html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+        html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+        html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+
+        // Lists
+        html = html.replace(/(?:^|\n)[-•]\s+([^\n]+)/g, (match, item) => `<li>${item.trim()}</li>`);
+        if (html.includes('<li>')) {
+            html = html.replace(/(<li>[\s\S]*<\/li>)/g, '<ul class="mb-2">$1</ul>');
+        }
+
+        // Headings
+        html = html.replace(/^###\s+(.*)$/gm, '<h6 class="mt-2 mb-1">$1</h6>');
+        html = html.replace(/^##\s+(.*)$/gm, '<h5 class="mt-2 mb-1">$1</h5>');
+        html = html.replace(/^#\s+(.*)$/gm, '<h4 class="mt-2 mb-1">$1</h4>');
+
+        // Line breaks to <br> and paragraphs
+        html = html.replace(/\n{2,}/g, '</p><p>');
+        html = `<p>${html.replace(/\n/g, '<br>')}</p>`;
+
+        return html;
     }
 
     translate(key) {

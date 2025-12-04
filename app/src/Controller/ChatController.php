@@ -8,6 +8,7 @@ use App\Exception\RateLimitExceededException;
 use App\Repository\ConversationMessageRepository;
 use App\Repository\ConversationRepository;
 use App\Service\ChatService;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -72,6 +73,7 @@ class ChatController extends AbstractController
             'status' => $message->getStatus(),
             'error' => $message->getErrorMessage(),
             'sourceDocuments' => $message->getSourceDocuments(),
+            'format' => 'markdown',
             'createdAt' => $message->getCreatedAt()->format(DATE_ATOM),
             'streamedAt' => $message->getStreamedAt()?->format(DATE_ATOM),
             'finishedAt' => $message->getFinishedAt()?->format(DATE_ATOM),

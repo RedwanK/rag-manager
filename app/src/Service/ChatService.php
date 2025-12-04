@@ -70,6 +70,18 @@ class ChatService
         $now = new DateTimeImmutable();
         $conversation->setLastActivityAt($now);
 
+        // Deduplicate quick successive submits with identical prompt on the same conversation
+        $duplicateUserMessage = $this->conversationMessageRepository->findRecentUserMessageByContent($conversation, $prompt, 5);
+        if ($duplicateUserMessage !== null) {
+            $existingAssistant = $this->conversationMessageRepository->findAssistantMessageAfter($conversation, $duplicateUserMessage->getCreatedAt());
+            if ($existingAssistant !== null) {
+                return [
+                    'userMessage' => $duplicateUserMessage,
+                    'assistantMessage' => $existingAssistant,
+                ];
+            }
+        }
+
         if (trim($conversation->getTitle()) === '' || $conversation->getTitle() === 'Nouvelle discussion') {
             $conversation->setTitle($this->generateTitle($prompt));
         }
@@ -216,7 +228,7 @@ class ChatService
         if ($event === 'token') {
             $text = is_array($payload) && array_key_exists('text', $payload) ? (string) $payload['text'] : (string) $payload;
             $assistantMessage->setContent(($assistantMessage->getContent() ?? '') . $text);
-            $emit('token', ['text' => $text]);
+            $emit('token', ['text' => $text, 'format' => 'markdown']);
         } elseif ($event === 'sources') {
             $sources = is_array($payload) ? $payload : [];
             $assistantMessage->setSourceDocuments($sources);
@@ -225,11 +237,19 @@ class ChatService
             $message = is_array($payload) && array_key_exists('message', $payload)
                 ? (string) $payload['message']
                 : (string) ($payload ?? 'Erreur inconnue');
+            if ($message === '') {
+                $message = 'Erreur inconnue';
+            }
             $assistantMessage
                 ->setStatus(ConversationMessage::STATUS_ERROR)
                 ->setErrorMessage($message)
                 ->setFinishedAt(new DateTimeImmutable());
             $emit('error', ['message' => $message]);
+            $this->logger->error('LightRag returned error event', [
+                'conversation' => $conversation->getId(),
+                'message' => $assistantMessage->getId(),
+                'payload' => $payload,
+            ]);
         }
 
         $conversation->setLastActivityAt(new DateTimeImmutable());
