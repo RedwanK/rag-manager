@@ -13,12 +13,21 @@ use App\Repository\LightRagRequestLogRepository;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\EventStreamResponse;
+use Symfony\Component\HttpFoundation\ServerEvent;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class ChatService
 {
+    const DEFAULT_CONVERSATION_TITLE = "chat.new_conversation";
+    const SSE_EVENT_TOKEN = 'token';
+    const SSE_EVENT_SOURCES = 'sources';
+    const SSE_EVENT_ERROR = 'error';
+    const SSE_EVENT_DONE = 'done';
+
     public function __construct(
         private readonly ConversationMessageRepository $conversationMessageRepository,
-        private readonly LightRagRequestLogRepository $lightRagRequestLogRepository,
+        private readonly TranslatorInterface $translator,
         private readonly EntityManagerInterface $em,
         private readonly LightRagClient $lightRagClient,
         private readonly PromptRateLimiter $promptRateLimiter,
@@ -70,7 +79,25 @@ class ChatService
         $now = new DateTimeImmutable();
         $conversation->setLastActivityAt($now);
 
-        if (trim($conversation->getTitle()) === '' || $conversation->getTitle() === 'Nouvelle discussion') {
+        // Deduplicate quick successive submits with identical prompt on the same conversation
+        $duplicateUserMessage = $this->conversationMessageRepository->findRecentUserMessageByContent($conversation, $prompt, 5);
+        if ($duplicateUserMessage !== null) {
+            $existingAssistant = $this->conversationMessageRepository->findAssistantMessageAfter(
+                $conversation, 
+                DateTimeImmutable::createFromMutable($duplicateUserMessage->getCreatedAt())
+            );
+
+            if ($existingAssistant !== null) {
+                return [
+                    'userMessage' => $duplicateUserMessage,
+                    'assistantMessage' => $existingAssistant,
+                ];
+            }
+        }
+
+        if (trim($conversation->getTitle()) === '' || 
+            $conversation->getTitle() === $this->translator->trans(self::DEFAULT_CONVERSATION_TITLE)) {
+            
             $conversation->setTitle($this->generateTitle($prompt));
         }
 
@@ -99,9 +126,10 @@ class ChatService
     /**
      * @param callable(string, mixed): void $emit
      */
-    public function streamAssistantMessage(Conversation $conversation, ConversationMessage $assistantMessage, User $user, callable $emit): void
+    public function streamAssistantMessage(Conversation $conversation, ConversationMessage $assistantMessage, User $user, EventStreamResponse $response): void
     {
         $start = microtime(true);
+
         $log = (new LightRagRequestLog())
             ->setConversation($conversation)
             ->setMessage($assistantMessage)
@@ -120,12 +148,12 @@ class ChatService
             $this->lightRagClient->streamQuery(
                 $prompt,
                 $history,
-                function (string $event, mixed $payload) use ($assistantMessage, $conversation, $emit): void {
+                function (string $event, mixed $payload) use ($assistantMessage, $conversation, $response): void {
                     if ($this->cancellationManager->isCancelled((int) $assistantMessage->getId())) {
                         throw new ChatStreamCancelledException('cancelled_by_user');
                     }
 
-                    $this->handleStreamEvent($assistantMessage, $conversation, $emit, $event, $payload);
+                    $this->handleStreamEvent($assistantMessage, $conversation, $response, $event, $payload);
                 },
                 fn () => $this->cancellationManager->isCancelled((int) $assistantMessage->getId())
             );
@@ -136,30 +164,34 @@ class ChatService
                     ->setFinishedAt(new DateTimeImmutable());
                 $conversation->setLastActivityAt(new DateTimeImmutable());
             }
+
         } catch (RateLimitExceededException $rateLimitExceededException) {
             $assistantMessage
                 ->setStatus(ConversationMessage::STATUS_ERROR)
                 ->setErrorMessage($rateLimitExceededException->getMessage());
             $log->setStatus(LightRagRequestLog::STATUS_ERROR);
+
         } catch (ChatStreamCancelledException $cancelledException) {
             $assistantMessage
                 ->setStatus(ConversationMessage::STATUS_ERROR)
                 ->setErrorMessage($cancelledException->getMessage())
                 ->setFinishedAt(new DateTimeImmutable());
             $log->setStatus(LightRagRequestLog::STATUS_CANCELLED);
-            $emit('error', ['message' => $cancelledException->getMessage()]);
+            $response->sendEvent(new ServerEvent(['message' => $cancelledException->getMessage()], self::SSE_EVENT_ERROR));
+            
         } catch (\Throwable $error) {
             $assistantMessage
                 ->setStatus(ConversationMessage::STATUS_ERROR)
                 ->setErrorMessage($error->getMessage())
                 ->setFinishedAt(new DateTimeImmutable());
             $log->setStatus(LightRagRequestLog::STATUS_ERROR);
-            $emit('error', ['message' => $error->getMessage()]);
-            $this->logger->error('LightRag stream failed', [
+            $response->sendEvent(new ServerEvent(['message' => $error->getMessage()], self::SSE_EVENT_ERROR));
+            $this->logger->error($this->translator->trans('chat.errors.lightrag_stream_failed'), [
                 'conversation' => $conversation->getId(),
                 'message' => $assistantMessage->getId(),
                 'error' => $error->getMessage(),
             ]);
+
         } finally {
             if ($assistantMessage->getStatus() === ConversationMessage::STATUS_ERROR && $log->getStatus() === LightRagRequestLog::STATUS_SUCCESS) {
                 $log->setStatus(LightRagRequestLog::STATUS_ERROR);
@@ -168,7 +200,8 @@ class ChatService
             $duration = (int) ((microtime(true) - $start) * 1000);
             $log->setDurationMs($duration);
             $this->em->flush();
-            $emit('done', null);
+            // Here we send '-' because we need to send something, it could be anything, like a sandwich
+            $response->sendEvent(new ServerEvent('-', self::SSE_EVENT_DONE));
         }
     }
 
@@ -209,27 +242,35 @@ class ChatService
     private function handleStreamEvent(
         ConversationMessage $assistantMessage,
         Conversation $conversation,
-        callable $emit,
+        EventStreamResponse $response,
         string $event,
         mixed $payload
     ): void {
-        if ($event === 'token') {
+        if ($event === self::SSE_EVENT_TOKEN) {
             $text = is_array($payload) && array_key_exists('text', $payload) ? (string) $payload['text'] : (string) $payload;
             $assistantMessage->setContent(($assistantMessage->getContent() ?? '') . $text);
-            $emit('token', ['text' => $text]);
-        } elseif ($event === 'sources') {
-            $sources = is_array($payload) ? $payload : [];
-            $assistantMessage->setSourceDocuments($sources);
-            $emit('sources', $sources);
-        } elseif ($event === 'error') {
+            $response->sendEvent(new ServerEvent($this->normalizeSsePayload($text), self::SSE_EVENT_TOKEN));
+        } elseif ($event === self::SSE_EVENT_SOURCES) {
+            $assistantMessage->setSourceDocuments($payload);
+            $sources = !empty($payload) ? $payload : "-";
+            $response->sendEvent(new ServerEvent(json_encode($sources), self::SSE_EVENT_SOURCES));
+        } elseif ($event === self::SSE_EVENT_ERROR) {
             $message = is_array($payload) && array_key_exists('message', $payload)
                 ? (string) $payload['message']
-                : (string) ($payload ?? 'Erreur inconnue');
+                : (string) ($payload ?? $this->translator->trans('chat.errors.unknown'));
+            if ($message === '') {
+                $message = $this->translator->trans('chat.errors.unknown');
+            }
             $assistantMessage
                 ->setStatus(ConversationMessage::STATUS_ERROR)
                 ->setErrorMessage($message)
                 ->setFinishedAt(new DateTimeImmutable());
-            $emit('error', ['message' => $message]);
+            $response->sendEvent(new ServerEvent(['message' => $message], 'error'));    
+            $this->logger->error($this->translator->trans('chat.errors.lightrag_return_error'), [
+                'conversation' => $conversation->getId(),
+                'message' => $assistantMessage->getId(),
+                'payload' => $payload,
+            ]);
         }
 
         $conversation->setLastActivityAt(new DateTimeImmutable());
@@ -240,11 +281,27 @@ class ChatService
     {
         $trimmed = trim($prompt);
         if ($trimmed === '') {
-            return 'Nouvelle discussion';
+            return $this->translator->trans(self::DEFAULT_CONVERSATION_TITLE);
         }
 
         $normalized = preg_replace('/\s+/', ' ', $trimmed) ?? $trimmed;
 
         return mb_substr($normalized, 0, 120);
+    }
+
+    /**
+     * SSE data must not contain raw newlines; split them so EventSource reconstructs them client-side.
+     *
+     * @return string|list<string>
+     */
+    private function normalizeSsePayload(string $text): array|string
+    {
+        if (!str_contains($text, "\n") && !str_contains($text, "\r")) {
+            return $text;
+        }
+
+        $normalized = str_replace("\r\n", "\n", $text);
+
+        return explode("\n", $normalized);
     }
 }

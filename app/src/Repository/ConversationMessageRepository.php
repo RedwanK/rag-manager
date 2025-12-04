@@ -44,4 +44,40 @@ class ConversationMessageRepository extends ServiceEntityRepository
             ['createdAt' => 'DESC', 'id' => 'DESC']
         );
     }
+
+    public function findRecentUserMessageByContent(Conversation $conversation, string $content, int $seconds): ?ConversationMessage
+    {
+        $threshold = (new \DateTimeImmutable())->modify(sprintf('-%d seconds', $seconds));
+
+        return $this->createQueryBuilder('m')
+            ->andWhere('m.conversation = :conversation')
+            ->andWhere('m.role = :role')
+            ->andWhere('m.content = :content')
+            ->andWhere('m.createdAt >= :threshold')
+            ->setParameter('conversation', $conversation)
+            ->setParameter('role', ConversationMessage::ROLE_USER)
+            ->setParameter('content', $content)
+            ->setParameter('threshold', $threshold)
+            ->orderBy('m.createdAt', 'DESC')
+            ->addOrderBy('m.id', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    public function findAssistantMessageAfter(Conversation $conversation, \DateTimeImmutable $after): ?ConversationMessage
+    {
+        return $this->createQueryBuilder('m')
+            ->andWhere('m.conversation = :conversation')
+            ->andWhere('m.role = :role')
+            ->andWhere('m.createdAt >= :after')
+            ->setParameter('conversation', $conversation)
+            ->setParameter('role', ConversationMessage::ROLE_USER)
+            ->setParameter('after', $after)
+            ->orderBy('m.createdAt', 'DESC')
+            ->addOrderBy('m.id', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }

@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Exception\ChatStreamCancelledException;
+use Psr\Log\LoggerInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class LightRagClient
@@ -10,7 +11,8 @@ class LightRagClient
     public function __construct(
         private readonly HttpClientInterface $client,
         private readonly string $lightRagBaseUrl,
-        private readonly int $lightRagTimeout
+        private readonly int $lightRagTimeout,
+        protected LoggerInterface $logger
     ) {
     }
 
@@ -21,6 +23,8 @@ class LightRagClient
      */
     public function streamQuery(string $prompt, array $history, callable $onEvent, ?callable $shouldCancel = null): void
     {
+        set_time_limit(360);
+
         $response = $this->client->request('POST', rtrim($this->lightRagBaseUrl, '/') . '/query/stream', [
             'headers' => [
                 'Accept' => 'text/event-stream',
@@ -28,8 +32,9 @@ class LightRagClient
             ],
             'json' => [
                 'query' => $prompt,
-                'history' => $history,
-                'mode' => 'mix'
+                'conversation_history' => $history,
+                'mode' => 'mix',
+                'enable_rerank' => false
             ],
             'timeout' => $this->lightRagTimeout,
         ]);
@@ -50,47 +55,66 @@ class LightRagClient
                 continue;
             }
 
-            $buffer .= $chunk->getContent(false);
+            $content = $chunk->getContent(false);
+            $this->logger->debug('LightRag chunk', ['chunk' => $content]);
+
+            $buffer .= $content;
             foreach ($this->parseEvents($buffer) as $parsedEvent) {
                 [$event, $payload] = $parsedEvent;
                 $onEvent($event, $payload);
             }
+        }
+
+        // flush remaining buffered data if the stream ended without a trailing separator
+        foreach ($this->parseEvents($buffer, true) as $parsedEvent) {
+            [$event, $payload] = $parsedEvent;
+            $onEvent($event, $payload);
         }
     }
 
     /**
      * @return list<array{0: string, 1: mixed}>
      */
-    private function parseEvents(string &$buffer): array
+    private function parseEvents(string &$buffer, bool $forceFlush = false): array
     {
         $events = [];
-        $parts = preg_split("/\n\n/", $buffer);
+        
+        // NDJSON / line-based JSON (LightRag emits {"response": "..."} or {"references": [...]})
+        $parts = preg_split("/\r?\n/", $buffer);
         if ($parts === false) {
             return $events;
         }
 
-        // keep last part in buffer if it is incomplete
-        $buffer = array_pop($parts) ?? '';
+        $buffer = array_pop($parts) ?? ($forceFlush ? '' : $buffer);
+        if ($forceFlush && $buffer !== '') {
+            $parts[] = $buffer;
+            $buffer = '';
+        }
 
-        foreach ($parts as $part) {
-            $event = 'token';
-            $dataLines = [];
-
-            foreach (explode("\n", trim($part)) as $line) {
-                if (str_starts_with($line, 'event:')) {
-                    $event = trim(substr($line, 6));
-                    continue;
-                }
-
-                if (str_starts_with($line, 'data:')) {
-                    $dataLines[] = trim(substr($line, 5));
-                }
+        foreach ($parts as $line) {
+            $line = trim($line);
+            if ($line === '') {
+                continue;
             }
 
-            $payloadRaw = implode("\n", $dataLines);
-            $decoded = json_decode($payloadRaw, true);
-            $events[] = [$event, $decoded ?? $payloadRaw];
+            $decoded = json_decode($line, true);
+            if (is_array($decoded)) {
+                if (array_key_exists('references', $decoded)) {
+                    $events[] = ['sources', $decoded['references']];
+                }
+
+                if (array_key_exists('response', $decoded)) {
+                    $events[] = ['token', ['text' => (string) $decoded['response']]];
+                }
+
+                if (!array_key_exists('references', $decoded) && !array_key_exists('response', $decoded)) {
+                    $events[] = ['token', $decoded];
+                }
+            } else {
+                $events[] = ['token', ['text' => $line]];
+            }
         }
+    
 
         return $events;
     }

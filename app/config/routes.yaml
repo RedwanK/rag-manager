@@ -15,7 +15,7 @@ app_homepage:
     path: /
     controller: Symfony\Bundle\FrameworkBundle\Controller\RedirectController
     defaults:
-        route: 'repository_tree'
+        route: 'chat_ui_index'
         permanent: true
         keepQueryParams: true
         keepRequestMethod: true

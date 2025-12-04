@@ -28,6 +28,22 @@ class ConversationRepository extends ServiceEntityRepository
         );
     }
 
+    /**
+     * @return Conversation[]
+     */
+    public function findRecentForUser(User $user, int $limit = 5): array
+    {
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.user = :user')
+            ->andWhere('c.deletedAt IS NULL')
+            ->setParameter('user', $user)
+            ->orderBy('c.lastActivityAt', 'DESC')
+            ->addOrderBy('c.id', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
     public function findOwnedById(int $id, User $user): ?Conversation
     {
         return $this->findOneBy([

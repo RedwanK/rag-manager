@@ -1,0 +1,99 @@
+{% extends 'layout/app.html.twig' %}
+
+{% block title %}{{ 'chat.title'|trans }}{% endblock %}
+
+{% block page_header %}
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <p class="text-muted mb-1">{{ 'chat.lead'|trans }}</p>
+        </div>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="badge bg-label-info">{{ 'chat.badges.secure'|trans }}</span>
+            <span class="badge bg-label-secondary">{{ 'chat.badges.live'|trans }}</span>
+            <form action="{{ path('chat_ui_new') }}" method="post" class="ms-2">
+                <input type="hidden" name="_token" value="{{ csrf_token('chat_ui_new') }}">
+                <button type="submit" class="btn btn-sm btn-primary d-flex align-items-center gap-2">
+                    {{ ux_icon('bx:plus') }}<span>{{ 'chat.sidebar.new'|trans }}</span>
+                </button>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block page_content %}
+    <div
+        data-controller="chat"
+        data-chat-messages-url-value="{{ path('chat_conversations_messages', {id: 0}) }}"
+        data-chat-prompt-url-value="{{ path('chat_conversations_prompt', {id: 0}) }}"
+        data-chat-cancel-url-value="{{ path('chat_messages_cancel', {id: 0}) }}"
+        data-chat-stream-url-value="{{ path('chat_stream_stream', {conversationId: 0, messageId: 0}) }}"
+        data-chat-initial-conversations-value='{{ initialConversations|json_encode(constant('JSON_HEX_APOS')) }}'
+        data-chat-active-conversation-id-value="{{ conversation.id }}"
+        class="chat-workspace"
+    >
+        <div class="card chat-card">
+            <div class="card-header d-flex justify-content-between align-items-start gap-3">
+                <div>
+                    <p class="text-muted mb-1 small" {{ stimulus_target('chat', 'conversationMeta') }}>{{ 'chat.thread.placeholder'|trans }}</p>
+                    <h5 class="mb-0" {{ stimulus_target('chat', 'conversationTitle') }}>{{ conversation.title ?: 'Nouvelle discussion' }}</h5>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-label-primary d-flex align-items-center gap-2" {{ stimulus_target('chat', 'streamStatus') }} hidden>
+                        <span {{ stimulus_target('chat', 'tokenCount') }}>0</span>
+                        <span>{{ 'chat.streaming.tokens'|trans }}</span>
+                    </span>
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline-secondary d-none"
+                        {{ stimulus_action('chat', 'cancelStream', 'click') }}
+                        {{ stimulus_target('chat', 'cancelButton') }}
+                    >
+                        {{ ux_icon('bx:x-circle') }}
+                        <span>{{ 'chat.actions.cancel'|trans }}</span>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0 chat-thread-wrapper">
+                <div class="p-3 chat-thread" {{ stimulus_target('chat', 'thread') }}></div>
+                <div class="p-5 text-center text-muted" {{ stimulus_target('chat', 'threadEmpty') }} hidden>
+                    <div class="mb-2">{{ ux_icon('bx:message-rounded-detail') }}</div>
+                    <p class="mb-2 fw-semibold">{{ 'chat.thread.empty.title'|trans }}</p>
+                    <p class="mb-0 small">{{ 'chat.thread.empty.helper'|trans }}</p>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent">
+                <form class="chat-composer" {{ stimulus_action('chat', 'submitPrompt', 'submit') }} {{ stimulus_target('chat', 'composerForm') }}>
+                    <div class="input-group">
+                        <textarea
+                            class="form-control"
+                            rows="3"
+                            placeholder="{{ 'chat.actions.placeholder'|trans }}"
+                            {{ stimulus_target('chat', 'promptInput') }}
+                            required
+                        ></textarea>
+                        <button
+                            class="btn btn-primary d-flex align-items-center gap-2"
+                            type="submit"
+                            {{ stimulus_target('chat', 'sendButton') }}
+                        >
+                            {{ ux_icon('bx:send') }}<span>{{ 'chat.actions.send'|trans }}</span>
+                        </button>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <div class="text-muted small">{{ 'chat.thread.disclaimer'|trans }}</div>
+                        <button
+                            type="button"
+                            class="btn btn-link btn-sm text-decoration-none p-0"
+                            {{ stimulus_action('chat', 'retryLastPrompt', 'submit') }}
+                            {{ stimulus_target('chat', 'retryButton') }}
+                            hidden
+                        >
+                            {{ ux_icon('bx:refresh') }}
+                            <span>{{ 'chat.actions.retry'|trans }}</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

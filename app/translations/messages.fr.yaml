@@ -1,5 +1,5 @@
 app:
-  name: "RAG Manager"
+  name: "RAGWAN"
 
 auth:
   login:
@@ -22,6 +22,8 @@ menu:
   connected: "Connecté"
   guest: "Invité"
   logout: "Déconnexion"
+  chat: "Discussions"
+  configuration: "Configuration"
 
 form:
   actions:
@@ -127,6 +129,60 @@ repository:
 csrf:
   invalid: "Jeton CSRF invalide."
 
+chat:
+  menu:
+    all: "Toutes les discussions"
+    recent: "Récentes"
+  table:
+    title: "Titre"
+    last_activity: "Dernière activité"
+    created_at: "Créée le"
+    actions: "Actions"
+  title: "Assistant RAG"
+  lead: "Vos échanges restent privés et sécurisés."
+  helper: "Lancez une discussion pour questionner vos contenus indexés."
+  badges:
+    secure: "Connexion sécurisée"
+    live: "Streaming en direct"
+  sidebar:
+    title: "Conversations"
+    subtitle: "Historique et nouveaux fils"
+    new: "Nouvelle discussion"
+    empty:
+      title: "Aucune conversation"
+      helper: "Démarrez un fil pour retrouver vos prochaines réponses."
+  thread:
+    title: "Fil de discussion"
+    placeholder: "Sélectionnez une conversation pour afficher les messages."
+    empty:
+      title: "Aucun message encore"
+      helper: "Envoyez votre première question pour démarrer la conversation."
+    disclaimer: "Les réponses peuvent contenir des approximations. Vérifiez toujours les sources."
+    last_activity: "Dernière activité :"
+  actions:
+    send: "Envoyer"
+    retry: "Réessayer"
+    cancel: "Annuler"
+    placeholder: "Décrivez votre question ou votre besoin..."
+    open: "Ouvrir"
+  streaming:
+    tokens: "tokens"
+  roles:
+    user: "Vous"
+    assistant: "Assistant"
+  errors:
+    title: "Une erreur est survenue"
+    generic: "Une erreur est survenue lors de la génération."
+    cancelled: "Génération annulée."
+    lightrag_stream_failed: LightRag Stream Failed
+    lightrag_return_error: LightRag returned error event
+    unknown: Erreur inconnue
+  sources:
+    title: "Sources"
+    item: "Source"
+  new_conversation: Nouvelle discussion
+
+    
 ingestion:
   menu: "File d'ingestion"
   queue:
