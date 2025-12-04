@@ -36,118 +36,11 @@ export default class extends Controller {
         this.streamSource = null;
         this.streamingMessageId = null;
 
-        this.renderConversations();
-        if (this.activeConversationId) {
-            this.selectConversation(this.activeConversationId);
-        }
-        this.refreshConversations();
+        this.loadMessages(this.activeConversationId);
     }
 
     disconnect() {
         this.closeStream();
-    }
-
-    async refreshConversations() {
-        try {
-            const response = await fetch(this.conversationsUrlValue, { headers: { Accept: 'application/json' } });
-            if (!response.ok) {
-                throw new Error('unable to load conversations');
-            }
-
-            const data = await response.json();
-            this.conversations = data.map((conversation) => ({ ...conversation }));
-            this.renderConversations();
-
-            if (this.activeConversationId && this.conversations.some((c) => c.id === this.activeConversationId)) {
-                this.selectConversation(this.activeConversationId);
-            } else if (!this.activeConversationId && this.conversations.length > 0) {
-                this.selectConversation(this.conversations[0].id);
-            }
-
-            this.toggleEmptyStates();
-        } catch (error) {
-            this.renderError('Impossible de charger les discussions.');
-        }
-    }
-
-    toggleEmptyStates() {
-        const hasConversations = this.conversations.length > 0;
-        if (this.hasEmptyConversationsTarget) {
-            this.emptyConversationsTarget.hidden = hasConversations;
-        }
-
-        if (!hasConversations) {
-            this.showEmptyThread();
-        }
-    }
-
-    renderConversations() {
-        if (!this.hasConversationListTarget) {
-            return;
-        }
-
-        if (this.conversations.length === 0) {
-            this.conversationListTarget.innerHTML = '';
-            this.toggleEmptyStates();
-            return;
-        }
-
-        this.conversationListTarget.innerHTML = this.conversations
-            .map((conversation) => this.conversationItemTemplate(conversation))
-            .join('');
-
-        this.conversationListTarget.querySelectorAll('[data-action="chat#selectConversation"]')
-            .forEach((button) => {
-                button.addEventListener('click', (event) => {
-                    event.preventDefault();
-                    const id = Number.parseInt(button.dataset.id, 10);
-                    this.selectConversation(id);
-                });
-            });
-
-        this.toggleEmptyStates();
-    }
-
-    conversationItemTemplate(conversation) {
-        const active = conversation.id === this.activeConversationId;
-        const statusBadge = this.buildConversationBadge(conversation);
-        return `
-            <button class="list-group-item list-group-item-action d-flex align-items-start gap-3 ${active ? 'active' : ''}" data-action="chat#selectConversation" data-id="${conversation.id}">
-                <div class="avatar bg-label-primary text-primary">
-                    <span>${(conversation.title || 'N').charAt(0).toUpperCase()}</span>
-                </div>
-                <div class="flex-grow-1 text-start">
-                    <div class="d-flex justify-content-between align-items-start gap-2">
-                        <div class="fw-semibold text-truncate">${this.escape(conversation.title || 'Nouvelle discussion')}</div>
-                        ${statusBadge}
-                    </div>
-                    <div class="small text-muted">${this.formatTimestamp(conversation.lastActivityAt)}</div>
-                </div>
-            </button>
-        `;
-    }
-
-    buildConversationBadge(conversation) {
-        if (conversation.lastMessageStatus === 'error') {
-            return '<span class="badge bg-label-danger">!</span>';
-        }
-
-        if (conversation.lastMessageId && conversation.lastSeenMessageId && conversation.lastSeenMessageId < conversation.lastMessageId) {
-            return '<span class="badge bg-label-primary">●</span>';
-        }
-
-        return '<span class="badge bg-label-secondary"> </span>';
-    }
-
-    async selectConversation(conversationId) {
-        if (this.streamSource && this.isSending) {
-            return;
-        }
-
-        this.activeConversationId = conversationId;
-        this.renderConversations();
-        this.renderLoadingThread();
-        await this.loadMessages(conversationId);
     }
 
     renderLoadingThread() {
@@ -191,10 +84,10 @@ export default class extends Controller {
 
             const messages = await response.json();
             this.renderThread(messages);
-            this.markConversationSeen(conversationId, messages);
             this.updateConversationHeader(conversationId);
             this.updateLastPrompt(messages);
         } catch (error) {
+            console.log(error);
             this.renderError('Impossible de charger les messages.');
         }
     }
@@ -204,24 +97,6 @@ export default class extends Controller {
         if (lastUserMessage && lastUserMessage.content) {
             this.lastPrompt = lastUserMessage.content;
         }
-    }
-
-    markConversationSeen(conversationId, messages) {
-        const lastMessage = messages.at(-1);
-        this.conversations = this.conversations.map((conversation) => {
-            if (conversation.id !== conversationId) {
-                return conversation;
-            }
-
-            return {
-                ...conversation,
-                lastMessageId: lastMessage?.id ?? null,
-                lastMessageStatus: lastMessage?.status ?? null,
-                lastMessageRole: lastMessage?.role ?? null,
-                lastSeenMessageId: lastMessage?.id ?? conversation.lastSeenMessageId,
-            };
-        });
-        this.renderConversations();
     }
 
     updateConversationHeader(conversationId) {
@@ -278,7 +153,7 @@ export default class extends Controller {
                 <div class="avatar ${isUser ? 'bg-primary text-white' : 'bg-label-secondary text-muted'}">
                     <span>${this.icon(icon)}</span>
                 </div>
-                <div class="flex-grow-1">
+                <div class="flex-shrink-1">
                     <div class="chat-bubble ${bubbleClass} ${message.status === 'error' ? 'border border-danger' : ''}" data-message-id="${message.id}" data-format="${format}">
                         <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
                             <span class="fw-semibold">${isUser ? this.translate('chat.roles.user') : this.translate('chat.roles.assistant')}</span>
@@ -366,8 +241,6 @@ export default class extends Controller {
                 body: JSON.stringify({ prompt }),
             });
 
-            console.log(response);
-
             if (!response.ok) {
                 const errorPayload = await response.json().catch(() => ({}));
                 const message = errorPayload.message || this.translate('chat.errors.generic');
@@ -444,13 +317,14 @@ export default class extends Controller {
         this.streamSource = new EventSource(streamUrl);
 
         this.streamSource.addEventListener('token', (event) => {
-            const payload = JSON.parse(event.data || '{}');
+            const payload = event.data;
             tokens += 1;
             this.tokenCountTarget.textContent = String(tokens);
-            this.updateStreamingContent(messageId, payload.text || '');
+            this.updateStreamingContent(messageId, payload || '');
         });
 
         this.streamSource.addEventListener('sources', (event) => {
+            console.log(event);
             const payload = JSON.parse(event.data || '[]');
             this.attachSources(messageId, payload);
         });
@@ -469,7 +343,7 @@ export default class extends Controller {
             this.handleStreamCompletion(messageId);
         });
 
-        this.streamSource.onerror = () => {
+        this.streamSource.onerror = (event) => {
             if (streamCompleted || (this.streamSource && this.streamSource.readyState === EventSource.CLOSED)) {
                 return;
             }
@@ -514,7 +388,6 @@ export default class extends Controller {
         this.isSending = false;
         this.updateComposerState(false);
         this.closeStream();
-        this.refreshConversations();
         this.streamingMessageId = null;
         const bubble = this.findMessageBubble(messageId);
         if (!bubble) {
@@ -558,30 +431,6 @@ export default class extends Controller {
                 </div>
             </div>
         `);
-    }
-
-    async newConversation() {
-        if (this.isSending) {
-            return;
-        }
-        try {
-            const response = await fetch(this.createConversationUrlValue, {
-                method: 'POST',
-                headers: { Accept: 'application/json' },
-                body: JSON.stringify({}),
-            });
-            if (!response.ok) {
-                throw new Error('create');
-            }
-            const conversation = await response.json();
-            this.conversations.unshift({ ...conversation });
-            this.renderConversations();
-            this.toggleEmptyStates();
-            this.selectConversation(conversation.id);
-            this.promptInputTarget.focus();
-        } catch (error) {
-            this.renderError('Impossible de créer une discussion.');
-        }
     }
 
     async retryLastPrompt(event) {

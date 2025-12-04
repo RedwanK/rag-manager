@@ -32,8 +32,9 @@ class LightRagClient
             ],
             'json' => [
                 'query' => $prompt,
-                'history' => $history,
-                'mode' => 'mix'
+                'conversation_history' => $history,
+                'mode' => 'mix',
+                'enable_rerank' => false
             ],
             'timeout' => $this->lightRagTimeout,
         ]);
@@ -77,85 +78,43 @@ class LightRagClient
     private function parseEvents(string &$buffer, bool $forceFlush = false): array
     {
         $events = [];
+        
+        // NDJSON / line-based JSON (LightRag emits {"response": "..."} or {"references": [...]})
+        $parts = preg_split("/\r?\n/", $buffer);
+        if ($parts === false) {
+            return $events;
+        }
 
-        // SSE framing (event:/data:)
-        if (preg_match('/^event:/m', $buffer) || preg_match('/^data:/m', $buffer)) {
-            $parts = preg_split("/\r?\n\r?\n/", $buffer);
-            if ($parts === false) {
-                return $events;
+        $buffer = array_pop($parts) ?? ($forceFlush ? '' : $buffer);
+        if ($forceFlush && $buffer !== '') {
+            $parts[] = $buffer;
+            $buffer = '';
+        }
+
+        foreach ($parts as $line) {
+            $line = trim($line);
+            if ($line === '') {
+                continue;
             }
 
-            $buffer = array_pop($parts) ?? ($forceFlush ? '' : $buffer);
-            if ($forceFlush && $buffer !== '') {
-                $parts[] = $buffer;
-                $buffer = '';
-            }
-
-            foreach ($parts as $part) {
-                $part = trim($part);
-                if ($part === '') {
-                    continue;
+            $decoded = json_decode($line, true);
+            if (is_array($decoded)) {
+                if (array_key_exists('references', $decoded)) {
+                    $events[] = ['sources', $decoded['references']];
                 }
 
-                $event = 'token';
-                $dataLines = [];
-
-                foreach (preg_split("/\r?\n/", $part) as $line) {
-                    if ($line === '' || str_starts_with($line, ':')) {
-                        continue;
-                    }
-
-                    if (str_starts_with($line, 'event:')) {
-                        $event = trim(substr($line, 6));
-                        continue;
-                    }
-
-                    if (str_starts_with($line, 'data:')) {
-                        $dataLines[] = trim(substr($line, 5));
-                    }
+                if (array_key_exists('response', $decoded)) {
+                    $events[] = ['token', ['text' => (string) $decoded['response']]];
                 }
 
-                $payloadRaw = implode("\n", $dataLines);
-                $decoded = json_decode($payloadRaw, true);
-                $events[] = [$event, $decoded ?? $payloadRaw];
-            }
-        } else {
-            // NDJSON / line-based JSON (LightRag emits {"response": "..."} or {"references": [...]})
-            $parts = preg_split("/\r?\n/", $buffer);
-            if ($parts === false) {
-                return $events;
-            }
-
-            $buffer = array_pop($parts) ?? ($forceFlush ? '' : $buffer);
-            if ($forceFlush && $buffer !== '') {
-                $parts[] = $buffer;
-                $buffer = '';
-            }
-
-            foreach ($parts as $line) {
-                $line = trim($line);
-                if ($line === '') {
-                    continue;
+                if (!array_key_exists('references', $decoded) && !array_key_exists('response', $decoded)) {
+                    $events[] = ['token', $decoded];
                 }
-
-                $decoded = json_decode($line, true);
-                if (is_array($decoded)) {
-                    if (array_key_exists('references', $decoded)) {
-                        $events[] = ['sources', $decoded['references']];
-                    }
-
-                    if (array_key_exists('response', $decoded)) {
-                        $events[] = ['token', ['text' => (string) $decoded['response']]];
-                    }
-
-                    if (!array_key_exists('references', $decoded) && !array_key_exists('response', $decoded)) {
-                        $events[] = ['token', $decoded];
-                    }
-                } else {
-                    $events[] = ['token', ['text' => $line]];
-                }
+            } else {
+                $events[] = ['token', ['text' => $line]];
             }
         }
+    
 
         return $events;
     }

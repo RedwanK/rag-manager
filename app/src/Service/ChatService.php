@@ -13,6 +13,8 @@ use App\Repository\LightRagRequestLogRepository;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\EventStreamResponse;
+use Symfony\Component\HttpFoundation\ServerEvent;
 
 class ChatService
 {
@@ -73,7 +75,7 @@ class ChatService
         // Deduplicate quick successive submits with identical prompt on the same conversation
         $duplicateUserMessage = $this->conversationMessageRepository->findRecentUserMessageByContent($conversation, $prompt, 5);
         if ($duplicateUserMessage !== null) {
-            $existingAssistant = $this->conversationMessageRepository->findAssistantMessageAfter($conversation, $duplicateUserMessage->getCreatedAt());
+            $existingAssistant = $this->conversationMessageRepository->findAssistantMessageAfter($conversation, DateTimeImmutable::createFromMutable($duplicateUserMessage->getCreatedAt()));
             if ($existingAssistant !== null) {
                 return [
                     'userMessage' => $duplicateUserMessage,
@@ -111,7 +113,7 @@ class ChatService
     /**
      * @param callable(string, mixed): void $emit
      */
-    public function streamAssistantMessage(Conversation $conversation, ConversationMessage $assistantMessage, User $user, callable $emit): void
+    public function streamAssistantMessage(Conversation $conversation, ConversationMessage $assistantMessage, User $user, EventStreamResponse $response): void
     {
         $start = microtime(true);
         $log = (new LightRagRequestLog())
@@ -132,12 +134,12 @@ class ChatService
             $this->lightRagClient->streamQuery(
                 $prompt,
                 $history,
-                function (string $event, mixed $payload) use ($assistantMessage, $conversation, $emit): void {
+                function (string $event, mixed $payload) use ($assistantMessage, $conversation, $response): void {
                     if ($this->cancellationManager->isCancelled((int) $assistantMessage->getId())) {
                         throw new ChatStreamCancelledException('cancelled_by_user');
                     }
 
-                    $this->handleStreamEvent($assistantMessage, $conversation, $emit, $event, $payload);
+                    $this->handleStreamEvent($assistantMessage, $conversation, $response, $event, $payload);
                 },
                 fn () => $this->cancellationManager->isCancelled((int) $assistantMessage->getId())
             );
@@ -159,14 +161,14 @@ class ChatService
                 ->setErrorMessage($cancelledException->getMessage())
                 ->setFinishedAt(new DateTimeImmutable());
             $log->setStatus(LightRagRequestLog::STATUS_CANCELLED);
-            $emit('error', ['message' => $cancelledException->getMessage()]);
+            $response->sendEvent(new ServerEvent(['message' => $cancelledException->getMessage()],'error'));
         } catch (\Throwable $error) {
             $assistantMessage
                 ->setStatus(ConversationMessage::STATUS_ERROR)
                 ->setErrorMessage($error->getMessage())
                 ->setFinishedAt(new DateTimeImmutable());
             $log->setStatus(LightRagRequestLog::STATUS_ERROR);
-            $emit('error', ['message' => $error->getMessage()]);
+            $response->sendEvent(new ServerEvent(['message' => $error->getMessage()], 'error'));
             $this->logger->error('LightRag stream failed', [
                 'conversation' => $conversation->getId(),
                 'message' => $assistantMessage->getId(),
@@ -180,7 +182,7 @@ class ChatService
             $duration = (int) ((microtime(true) - $start) * 1000);
             $log->setDurationMs($duration);
             $this->em->flush();
-            $emit('done', null);
+            $response->sendEvent(new ServerEvent('-', 'done'));
         }
     }
 
@@ -221,18 +223,18 @@ class ChatService
     private function handleStreamEvent(
         ConversationMessage $assistantMessage,
         Conversation $conversation,
-        callable $emit,
+        EventStreamResponse $response,
         string $event,
         mixed $payload
     ): void {
         if ($event === 'token') {
             $text = is_array($payload) && array_key_exists('text', $payload) ? (string) $payload['text'] : (string) $payload;
             $assistantMessage->setContent(($assistantMessage->getContent() ?? '') . $text);
-            $emit('token', ['text' => $text, 'format' => 'markdown']);
+            $response->sendEvent(new ServerEvent($this->normalizeSsePayload($text), 'token'));
         } elseif ($event === 'sources') {
-            $sources = is_array($payload) ? $payload : [];
-            $assistantMessage->setSourceDocuments($sources);
-            $emit('sources', $sources);
+            $assistantMessage->setSourceDocuments($payload);
+            $sources = !empty($payload) ? $payload : "-";
+            $response->sendEvent(new ServerEvent(json_encode($sources), 'sources'));
         } elseif ($event === 'error') {
             $message = is_array($payload) && array_key_exists('message', $payload)
                 ? (string) $payload['message']
@@ -244,7 +246,7 @@ class ChatService
                 ->setStatus(ConversationMessage::STATUS_ERROR)
                 ->setErrorMessage($message)
                 ->setFinishedAt(new DateTimeImmutable());
-            $emit('error', ['message' => $message]);
+            $response->sendEvent(new ServerEvent(['message' => $message], 'error'));    
             $this->logger->error('LightRag returned error event', [
                 'conversation' => $conversation->getId(),
                 'message' => $assistantMessage->getId(),
@@ -266,5 +268,21 @@ class ChatService
         $normalized = preg_replace('/\s+/', ' ', $trimmed) ?? $trimmed;
 
         return mb_substr($normalized, 0, 120);
+    }
+
+    /**
+     * SSE data must not contain raw newlines; split them so EventSource reconstructs them client-side.
+     *
+     * @return string|list<string>
+     */
+    private function normalizeSsePayload(string $text): array|string
+    {
+        if (!str_contains($text, "\n") && !str_contains($text, "\r")) {
+            return $text;
+        }
+
+        $normalized = str_replace("\r\n", "\n", $text);
+
+        return explode("\n", $normalized);
     }
 }

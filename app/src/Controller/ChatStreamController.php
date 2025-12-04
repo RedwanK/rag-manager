@@ -7,7 +7,7 @@ use App\Repository\ConversationMessageRepository;
 use App\Repository\ConversationRepository;
 use App\Service\ChatService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\EventStreamResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -23,7 +23,7 @@ class ChatStreamController extends AbstractController
     }
 
     #[Route('/{conversationId}/{messageId}', name: 'stream', methods: ['GET'])]
-    public function streamConversation(int $conversationId, int $messageId): StreamedResponse
+    public function streamConversation(int $conversationId, int $messageId): EventStreamResponse
     {
         $conversation = $this->conversationRepository->findOwnedById($conversationId, $this->getUser());
         if (!$conversation) {
@@ -39,18 +39,18 @@ class ChatStreamController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        $response = new StreamedResponse(function () use ($conversation, $message): void {
-            $emit = function (string $event, mixed $payload = null): void {
-                echo "event: {$event}\n";
-                if ($payload !== null) {
-                    echo 'data: ' . json_encode($payload) . "\n";
-                }
-                echo "\n";
-                ob_flush();
-                flush();
-            };
+        $response = new EventStreamResponse(function (EventStreamResponse $response) use ($conversation, $message): void {
+            // $emit = function (string $event, mixed $payload = null): void {
+            //     echo "event: {$event}\n";
+            //     if ($payload !== null) {
+            //         echo 'data: ' . json_encode($payload) . "\n";
+            //     }
+            //     echo "\n";
+            //     ob_flush();
+            //     flush();
+            // };
 
-            $this->chatService->streamAssistantMessage($conversation, $message, $this->getUser(), $emit);
+            $this->chatService->streamAssistantMessage($conversation, $message, $this->getUser(), $response);
         });
 
         $response->headers->set('Content-Type', 'text/event-stream');
