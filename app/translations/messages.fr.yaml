@@ -174,10 +174,15 @@ chat:
     title: "Une erreur est survenue"
     generic: "Une erreur est survenue lors de la génération."
     cancelled: "Génération annulée."
+    lightrag_stream_failed: LightRag Stream Failed
+    lightrag_return_error: LightRag returned error event
+    unknown: Erreur inconnue
   sources:
     title: "Sources"
     item: "Source"
+  new_conversation: Nouvelle discussion
 
+    
 ingestion:
   menu: "File d'ingestion"
   queue:
@@ -313,10 +318,3 @@ ingestion_queue_item:
   flash:
     updated: "Élément mis à jour"
     not_found: "Document introuvable."
-
-chat:
-  new_conversation: Nouvelle discussion
-  errors:
-    lightrag_stream_failed: LightRag Stream Failed
-    lightrag_return_error: LightRag returned error event
-    unknown: Erreur inconnue
