@@ -1,5 +1,5 @@
 app:
-  name: "RAG Manager"
+  name: "RAGWAN"
 
 auth:
   login:
@@ -23,6 +23,7 @@ menu:
   guest: "Invité"
   logout: "Déconnexion"
   chat: "Discussions"
+  configuration: "Configuration"
 
 form:
   actions:
@@ -312,3 +313,10 @@ ingestion_queue_item:
   flash:
     updated: "Élément mis à jour"
     not_found: "Document introuvable."
+
+chat:
+  new_conversation: Nouvelle discussion
+  errors:
+    lightrag_stream_failed: LightRag Stream Failed
+    lightrag_return_error: LightRag returned error event
+    unknown: Erreur inconnue

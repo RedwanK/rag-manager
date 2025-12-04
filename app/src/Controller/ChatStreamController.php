@@ -40,16 +40,6 @@ class ChatStreamController extends AbstractController
         }
 
         $response = new EventStreamResponse(function (EventStreamResponse $response) use ($conversation, $message): void {
-            // $emit = function (string $event, mixed $payload = null): void {
-            //     echo "event: {$event}\n";
-            //     if ($payload !== null) {
-            //         echo 'data: ' . json_encode($payload) . "\n";
-            //     }
-            //     echo "\n";
-            //     ob_flush();
-            //     flush();
-            // };
-
             $this->chatService->streamAssistantMessage($conversation, $message, $this->getUser(), $response);
         });
 

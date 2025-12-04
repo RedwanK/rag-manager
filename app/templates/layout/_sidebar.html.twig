@@ -11,41 +11,37 @@
 
         </li>
 
+        {% set recentConversations = recent_conversations() %}
+        <li class="menu-item {{ currentRoute == 'chat_ui_index' ? 'active' }}">
+            <a href="{{ path('chat_ui_index') }}" class="menu-link">
+                <div>{{ 'chat.menu.all'|trans({}, null, 'messages') }}</div>
+            </a>
+        </li>
+        {% if recentConversations is not empty %}
+            <li class="menu-header small text-uppercase mt-2 ms-3 mb-1 text-muted">
+                <span>{{ 'chat.menu.recent'|trans({}, null, 'messages') }}</span>
+            </li>
+            {% for conversation in recentConversations %}
+                <li class="menu-item">
+                    <a href="{{ path('chat_ui_show', {id: conversation.id}) }}" class="menu-link">
+                        <div class="d-flex flex-column">
+                            <span class="text-truncate">{{ conversation.title ?: 'Nouvelle discussion' }}</span>
+                            <small class="text-muted">{{ conversation.lastActivityAt ? conversation.lastActivityAt|date('d/m H:i') : '' }}</small>
+                        </div>
+                    </a>
+                </li>
+            {% endfor %}
+        {% endif %}
+
+        <li class="menu-header small text-uppercase mt-2 ms-3 mb-1 text-muted">
+            <span>{{ 'menu.configuration'|trans({}, null, 'messages') }}</span>
+        </li>
+
         <li class="menu-item {{ currentRoute starts with 'repository_tree' ? 'active' }}">
             <a href="{{ path('repository_tree') }}" class="menu-link d-flex align-items-center">
                 {{ ux_icon('bx:file-find') }}&nbsp;
                 <div>{{ 'menu.tree'|trans }}</div>
             </a>
-        </li>
-
-        {% set recentConversations = recent_conversations() %}
-        <li class="menu-item {{ currentRoute starts with 'chat_ui_' ? 'active open' }}">
-            <a href="javascript:void(0);" class="menu-link menu-toggle d-flex align-items-center">
-                {{ ux_icon('bx:chat') }}&nbsp;
-                <div>{{ 'menu.chat'|trans }}</div>
-            </a>
-            <ul class="menu-sub">
-                <li class="menu-item {{ currentRoute == 'chat_ui_index' ? 'active' }}">
-                    <a href="{{ path('chat_ui_index') }}" class="menu-link">
-                        <div>{{ 'chat.menu.all'|trans({}, null, 'messages') }}</div>
-                    </a>
-                </li>
-                {% if recentConversations is not empty %}
-                    <li class="menu-header small text-uppercase mt-2 ms-3 mb-1 text-muted">
-                        <span>{{ 'chat.menu.recent'|trans({}, null, 'messages') }}</span>
-                    </li>
-                    {% for conversation in recentConversations %}
-                        <li class="menu-item">
-                            <a href="{{ path('chat_ui_show', {id: conversation.id}) }}" class="menu-link">
-                                <div class="d-flex flex-column">
-                                    <span class="text-truncate">{{ conversation.title ?: 'Nouvelle discussion' }}</span>
-                                    <small class="text-muted">{{ conversation.lastActivityAt ? conversation.lastActivityAt|date('d/m H:i') : '' }}</small>
-                                </div>
-                            </a>
-                        </li>
-                    {% endfor %}
-                {% endif %}
-            </ul>
         </li>
 
         {% if is_granted('ROLE_EDITOR') %}

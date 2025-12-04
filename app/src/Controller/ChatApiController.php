@@ -17,43 +17,13 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/chat', name: 'chat_')]
 #[IsGranted('ROLE_USER')]
-class ChatController extends AbstractController
+class ChatApiController extends AbstractController
 {
     public function __construct(
         private readonly ConversationRepository $conversationRepository,
         private readonly ConversationMessageRepository $conversationMessageRepository,
         private readonly ChatService $chatService
     ) {
-    }
-
-    #[Route('/conversations', name: 'conversations_list', methods: ['GET'])]
-    public function listConversations(): JsonResponse
-    {
-        $user = $this->getUser();
-        $conversations = $this->conversationRepository->listForUser($user);
-
-        return $this->json(array_map(fn (Conversation $conversation) => [
-            'id' => $conversation->getId(),
-            'title' => $conversation->getTitle(),
-            'lastActivityAt' => $conversation->getLastActivityAt()->format(DATE_ATOM),
-            'createdAt' => $conversation->getCreatedAt()->format(DATE_ATOM),
-        ], $conversations));
-    }
-
-    #[Route('/conversations', name: 'conversations_create', methods: ['POST'])]
-    public function createConversation(Request $request): JsonResponse
-    {
-        $payload = json_decode($request->getContent(), true) ?? [];
-        $title = is_string($payload['title'] ?? null) ? $payload['title'] : null;
-
-        $conversation = $this->chatService->createConversation($this->getUser(), $title);
-
-        return $this->json([
-            'id' => $conversation->getId(),
-            'title' => $conversation->getTitle(),
-            'createdAt' => $conversation->getCreatedAt()->format(DATE_ATOM),
-            'lastActivityAt' => $conversation->getLastActivityAt()->format(DATE_ATOM),
-        ], JsonResponse::HTTP_CREATED);
     }
 
     #[Route('/conversations/{id}/messages', name: 'conversations_messages', methods: ['GET'])]
@@ -78,38 +48,6 @@ class ChatController extends AbstractController
             'streamedAt' => $message->getStreamedAt()?->format(DATE_ATOM),
             'finishedAt' => $message->getFinishedAt()?->format(DATE_ATOM),
         ], $messages));
-    }
-
-    #[Route('/conversations/{id}', name: 'conversations_delete', methods: ['DELETE'])]
-    public function deleteConversation(int $id): JsonResponse
-    {
-        $conversation = $this->conversationRepository->findOwnedById($id, $this->getUser());
-        if (!$conversation) {
-            return $this->json(['message' => 'Conversation not found.'], JsonResponse::HTTP_NOT_FOUND);
-        }
-
-        $this->chatService->deleteConversation($conversation);
-
-        return $this->json(['message' => 'Conversation archived.']);
-    }
-
-    #[Route('/conversations/{id}/title', name: 'conversations_rename', methods: ['PATCH'])]
-    public function renameConversation(int $id, Request $request): JsonResponse
-    {
-        $conversation = $this->conversationRepository->findOwnedById($id, $this->getUser());
-        if (!$conversation) {
-            return $this->json(['message' => 'Conversation not found.'], JsonResponse::HTTP_NOT_FOUND);
-        }
-
-        $payload = json_decode($request->getContent(), true) ?? [];
-        $title = (string) ($payload['title'] ?? '');
-        if (trim($title) === '') {
-            return $this->json(['message' => 'Title cannot be empty.'], JsonResponse::HTTP_BAD_REQUEST);
-        }
-
-        $this->chatService->renameConversation($conversation, $title);
-
-        return $this->json(['id' => $conversation->getId(), 'title' => $conversation->getTitle()]);
     }
 
     #[Route('/conversations/{id}/prompt', name: 'conversations_prompt', methods: ['POST'])]
@@ -152,7 +90,11 @@ class ChatController extends AbstractController
         }
 
         $conversation = $message->getConversation();
-        if ($conversation->getUser()->getId() !== $this->getUser()->getId()) {
+        /**
+         * @var User $user
+         */
+        $user = $this->getUser();
+        if ($conversation->getUser()->getId() !== $user->getId()) {
             return $this->json(['message' => 'Message not found.'], JsonResponse::HTTP_NOT_FOUND);
         }
 

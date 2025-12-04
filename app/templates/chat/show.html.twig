@@ -23,8 +23,6 @@
 {% block page_content %}
     <div
         data-controller="chat"
-        data-chat-conversations-url-value="{{ path('chat_conversations_list') }}"
-        data-chat-create-conversation-url-value="{{ path('chat_conversations_create') }}"
         data-chat-messages-url-value="{{ path('chat_conversations_messages', {id: 0}) }}"
         data-chat-prompt-url-value="{{ path('chat_conversations_prompt', {id: 0}) }}"
         data-chat-cancel-url-value="{{ path('chat_messages_cancel', {id: 0}) }}"
