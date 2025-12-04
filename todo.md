@@ -79,20 +79,20 @@
 - [x] Apply per-user rate limiting on prompt submission to prevent API flooding; return friendly error on limit hit. #lot4 #backend #security
 
 ## UI/UX chat
-- [ ] Create chat workspace with left conversation list (title, last activity, unread/error indicator, “Nouvelle discussion” CTA) and right thread view with message bubbles + avatars. #lot4 #ui #chat
-- [ ] Display streaming assistant message live; lock send button while in-flight; show token counter/spinner and replace buffer on `done`. #lot4 #ui #sse
-- [ ] Surface errors inline on the thread with retry (resend last prompt) and cancellation control; prevent double-submit (debounce). #lot4 #ui #ux
-- [ ] Show citations/sources if provided in SSE `sources` event; render timestamps on messages. #lot4 #ui #rag
+- [x] Create chat workspace with left conversation list (title, last activity, unread/error indicator, “Nouvelle discussion” CTA) and right thread view with message bubbles + avatars. #lot4 #ui #chat
+- [x] Display streaming assistant message live; lock send button while in-flight; show token counter/spinner and replace buffer on `done`. #lot4 #ui #sse
+- [x] Surface errors inline on the thread with retry (resend last prompt) and cancellation control; prevent double-submit (debounce). #lot4 #ui #ux
+- [x] Show citations/sources if provided in SSE `sources` event; render timestamps on messages. #lot4 #ui #rag
 - [ ] Empty state for no conversations with guidance and CTA to start a discussion. #lot4 #ui #ux
 
 ## Security, isolation, and rules
-- [ ] Enforce that users only see their own conversations/messages; gate chat access to authenticated users regardless of role. #lot4 #security
+- [x] Enforce that users only see their own conversations/messages; gate chat access to authenticated users regardless of role. #lot4 #security
 - [ ] Respect soft-delete: exclude archived conversations from list; keep data for audit unless hard delete is added later. #lot4 #backend #ux
-- [ ] Enforce ordering and context cap (e.g., last 20 messages) when building history for LightRag to avoid oversized payloads. #lot4 #backend #rag
-- [ ] Apply timeout for LightRag stream (e.g., 60s); on timeout, mark message `error`, persist reason, emit SSE error, and keep last known content. #lot4 #backend #observability
+- [x] Enforce ordering and context cap (e.g., last 20 messages) when building history for LightRag to avoid oversized payloads. #lot4 #backend #rag
+- [x] Apply timeout for LightRag stream (e.g., 60s); on timeout, mark message `error`, persist reason, emit SSE error, and keep last known content. #lot4 #backend #observability
 
 ## Observability & metrics
-- [ ] Log each LightRag request with conversation_id, message_id, user_id, duration, status/error for dashboards. #lot4 #observability
+- [x] Log each LightRag request with conversation_id, message_id, user_id, duration, status/error for dashboards. #lot4 #observability
 - [ ] Capture token counts/cost metrics if exposed by LightRag and store on assistant messages for later reporting. #lot4 #observability #rag
 
 ## Prepare prod deployement
