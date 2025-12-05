@@ -46,6 +46,16 @@ $dark-muted: #94a3b8;
 
 html.dark-style {
   color-scheme: dark;
+  --bs-body-bg: #{$dark-bg};
+  --bs-body-color: #{$dark-text};
+  --bs-border-color: #{$dark-border};
+  --bs-table-bg: #{$dark-elevated};
+  --bs-table-color: #{$dark-text};
+  --bs-table-border-color: #{$dark-border};
+  --bs-table-striped-bg: #{rgba($dark-elevated, 0.85)};
+  --bs-table-striped-color: #{$dark-text};
+  --bs-table-hover-bg: #{rgba($primary-color, 0.08)};
+  --bs-table-hover-color: #{$dark-text};
 
   body,
   .bg-body,
@@ -60,7 +70,8 @@ html.dark-style {
   .fw-semibold,
   .fw-bold,
   .menu-link,
-  .menu-text {
+  .menu-text,
+  .menu-icon {
     color: $dark-text;
   }
 
@@ -109,6 +120,36 @@ html.dark-style {
     }
   }
 
+  .layout-navbar,
+  .navbar,
+  .bg-navbar-theme {
+    background-color: $dark-surface !important;
+    border-bottom: 1px solid $dark-border;
+    color: $dark-text;
+  }
+
+  .layout-footer,
+  .content-footer,
+  footer,
+  .bg-footer-theme {
+    background-color: $dark-surface !important;
+    border-top: 1px solid $dark-border;
+    color: $dark-text;
+  }
+
+  .bg-body,
+  .bg-light,
+  .bg-white {
+    background-color: $dark-surface !important;
+    color: $dark-text !important;
+  }
+
+  .bg-menu-theme {
+    background-color: $dark-surface !important;
+    color: $dark-text;
+    border-color: $dark-border;
+  }
+
   .card,
   .content-footer,
   .dropdown-menu,
@@ -131,15 +172,25 @@ html.dark-style {
   }
 
   .table {
+    background-color: $dark-elevated;
+  }
+
+  .table {
     color: $dark-text;
 
     thead th {
       color: $dark-muted;
+      background-color: $dark-elevated;
     }
 
     tbody tr {
       border-color: $dark-border;
+      background-color: $dark-surface;
     }
+  }
+
+  .table-striped > tbody > tr:nth-of-type(odd) > * {
+    background-color: rgba($dark-elevated, 0.85);
   }
 
   .table-hover > tbody > tr:hover > * {
@@ -178,5 +229,56 @@ html.dark-style {
 
   hr {
     border-color: $dark-border;
+  }
+
+  // Chat surface tweaks
+  .chat-thread-wrapper {
+    background: linear-gradient(180deg, rgba($dark-bg, 0.85), rgba($dark-surface, 0.95));
+    border-top: 1px solid $dark-border;
+    border-bottom: 1px solid $dark-border;
+  }
+
+  .chat-thread {
+    background-color: transparent;
+  }
+
+  .chat-bubble {
+    background: $dark-elevated;
+    border: 1px solid $dark-border;
+    color: $dark-text;
+    box-shadow: none;
+
+    &-user {
+      background: lighten($primary-color, 5%);
+      color: $dark-text;
+    }
+
+    &-assistant {
+      background: $dark-surface;
+    }
+
+    &-assistant-active {
+      box-shadow: 0 4px 12px rgba($primary-color, 0.2);
+    }
+
+    small,
+    .text-muted {
+      color: $dark-text !important;
+    }
+  }
+
+  .chat-message-content {
+    color: $dark-text;
+
+    code {
+      background: $dark-elevated;
+      border: 1px solid $dark-border;
+      color: $dark-text;
+    }
+
+    pre code {
+      display: block;
+      padding: 0.5rem;
+    }
   }
 }

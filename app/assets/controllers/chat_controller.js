@@ -144,6 +144,7 @@ export default class extends Controller {
         const timestamp = message.finishedAt || message.streamedAt || message.createdAt;
         const statusBadge = this.messageStatusBadge(message);
         const sources = this.renderSources(message.sourceDocuments);
+
         const format = message.format || 'markdown';
 
         return `

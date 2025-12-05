@@ -6,6 +6,7 @@ export default class extends Controller {
     static values = {
         tree: Object,
         enqueueUrlTemplate: String,
+        documentUrlTemplate: String,
         translations: Object,
         filter: { type: String, default: 'all' },
         filterStorageKey: { type: String, default: 'repository-tree-filter' }
@@ -217,6 +218,7 @@ export default class extends Controller {
         const status = this.nodeStatus(data);
         const ingestion = this.ingestionStatus(data);
         const enqueueAction = this.renderEnqueueAction(data);
+        const openAction = this.renderDocumentLink(data);
         const tDetails = (this.translationsValue && this.translationsValue.details) || {};
 
         this.detailsTarget.innerHTML = `
@@ -238,6 +240,7 @@ export default class extends Controller {
                 <dd class="col-7 mb-2"><span class="badge bg-label-${ingestion.color} text-uppercase">${ingestion.label}</span></dd>
             </dl>
             ${enqueueAction}
+            ${openAction}
         `;
     }
 
@@ -366,6 +369,24 @@ export default class extends Controller {
                     ${this.escape(label)}
                 </button>
             </form>
+        `;
+    }
+
+    renderDocumentLink(data) {
+        const template = this.documentUrlTemplateValue || '';
+        if (!data.id || !template) {
+            return '';
+        }
+        const tDetails = (this.translationsValue && this.translationsValue.details) || {};
+        const href = template.replace('NODE_ID', data.id);
+        const label = tDetails.open || 'Ouvrir';
+
+        return `
+            <div class="mt-3">
+                <a class="btn btn-sm btn-outline-primary" href="${href}">
+                    ${this.escape(label)}
+                </a>
+            </div>
         `;
     }
 

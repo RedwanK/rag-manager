@@ -8,6 +8,9 @@ import './stimulus_bootstrap.js';
 import './styles/app.css';
 
 const THEME_STORAGE_KEY = 'rag-manager-theme';
+let currentTheme = null;
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+let prefersListenerBound = false;
 
 const resolvePreferredTheme = () => {
   const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
@@ -20,6 +23,7 @@ const resolvePreferredTheme = () => {
 };
 
 const applyTheme = theme => {
+  currentTheme = theme;
   const htmlElement = document.documentElement;
   const isDark = theme === 'dark';
 
@@ -44,12 +48,17 @@ const setTheme = theme => {
 
 const initThemeToggle = () => {
   const toggles = document.querySelectorAll('[data-theme-toggle]');
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
 
-  let currentTheme = resolvePreferredTheme();
+  if (!currentTheme) {
+    currentTheme = resolvePreferredTheme();
+  }
   applyTheme(currentTheme);
 
   toggles.forEach(toggle => {
+    if (toggle.dataset.themeToggleBound === 'true') {
+      return;
+    }
+
     const updateFromToggle = event => {
       const theme = event.target.checked ? 'dark' : 'light';
       currentTheme = theme;
@@ -57,16 +66,26 @@ const initThemeToggle = () => {
     };
 
     toggle.addEventListener('change', updateFromToggle);
+    toggle.dataset.themeToggleBound = 'true';
   });
 
-  prefersDark.addEventListener('change', event => {
-    if (localStorage.getItem(THEME_STORAGE_KEY)) {
-      return;
-    }
+  if (!prefersListenerBound) {
+    prefersDark.addEventListener('change', event => {
+      if (localStorage.getItem(THEME_STORAGE_KEY)) {
+        return;
+      }
 
-    currentTheme = event.matches ? 'dark' : 'light';
-    applyTheme(currentTheme);
-  });
+      currentTheme = event.matches ? 'dark' : 'light';
+      applyTheme(currentTheme);
+    });
+    prefersListenerBound = true;
+  }
 };
 
-document.addEventListener('DOMContentLoaded', initThemeToggle);
+document.addEventListener('DOMContentLoaded', () => {
+  currentTheme = resolvePreferredTheme();
+  applyTheme(currentTheme);
+  initThemeToggle();
+});
+
+document.addEventListener('turbo:load', initThemeToggle);
