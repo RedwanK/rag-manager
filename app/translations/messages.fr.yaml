@@ -24,6 +24,11 @@ menu:
   logout: "Déconnexion"
   chat: "Discussions"
   configuration: "Configuration"
+  preferences: "Préférences"
+  dark_mode:
+    title: "Mode sombre"
+    label: "Basculer"
+    helper: "Réduit la luminosité et applique un thème contrasté dans toute l'application."
 
 form:
   actions:

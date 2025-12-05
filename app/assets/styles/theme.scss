@@ -35,3 +35,148 @@ $boxicons-font-size-base: 16px;
 @import '../themes/scss/components';
 @import '../themes/scss/colors';
 @import "../themes/scss/theme-default.scss";
+
+// Custom dark mode overrides
+$dark-bg: #0b1021;
+$dark-surface: #111827;
+$dark-elevated: #0f172a;
+$dark-border: #1f2937;
+$dark-text: #e2e8f0;
+$dark-muted: #94a3b8;
+
+html.dark-style {
+  color-scheme: dark;
+
+  body,
+  .bg-body,
+  .layout-wrapper,
+  .layout-page,
+  .content-wrapper {
+    background-color: $dark-bg !important;
+    color: $dark-text;
+  }
+
+  a,
+  .fw-semibold,
+  .fw-bold,
+  .menu-link,
+  .menu-text {
+    color: $dark-text;
+  }
+
+  a:hover {
+    color: lighten($primary-color, 10%);
+  }
+
+  .text-muted,
+  .menu-header,
+  .menu-header-text {
+    color: $dark-muted !important;
+  }
+
+  .layout-menu.menu {
+    background: $dark-surface;
+    border-right: 1px solid $dark-border;
+
+    .menu-inner-shadow {
+      display: none;
+    }
+
+    .menu-header:before {
+      background-color: $dark-muted !important;
+    }
+
+    .menu-link:not(.active):hover {
+      background-color: rgba($primary-color, 0.08);
+    }
+
+    .menu-inner > .menu-item.active > .menu-link {
+      background-color: rgba($primary-color, 0.14) !important;
+      color: $primary-color;
+    }
+
+    .menu-inner > .menu-item.active:before {
+      background: $primary-color;
+    }
+
+    .menu-sub > .menu-item > .menu-link:before {
+      background-color: $dark-muted !important;
+    }
+
+    .menu-sub > .menu-item.active > .menu-link:not(.menu-toggle):before {
+      background-color: $primary-color !important;
+      border: 3px solid rgba($primary-color, 0.25) !important;
+    }
+  }
+
+  .card,
+  .content-footer,
+  .dropdown-menu,
+  .list-group-item,
+  .modal-content,
+  .popover,
+  .offcanvas {
+    background-color: $dark-surface;
+    border-color: $dark-border;
+    color: $dark-text;
+  }
+
+  .card-header,
+  .card-footer,
+  .dropdown-divider,
+  .modal-header,
+  .modal-footer,
+  .table > :not(caption) > * > * {
+    border-color: $dark-border;
+  }
+
+  .table {
+    color: $dark-text;
+
+    thead th {
+      color: $dark-muted;
+    }
+
+    tbody tr {
+      border-color: $dark-border;
+    }
+  }
+
+  .table-hover > tbody > tr:hover > * {
+    background-color: rgba($primary-color, 0.08);
+    color: $dark-text;
+  }
+
+  .form-control,
+  .form-select,
+  .form-check-input,
+  textarea.form-control {
+    background-color: $dark-elevated;
+    border-color: $dark-border;
+    color: $dark-text;
+  }
+
+  .form-control:focus,
+  .form-select:focus {
+    border-color: lighten($primary-color, 5%);
+    box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.25);
+  }
+
+  .btn-outline-secondary,
+  .btn-light {
+    color: $dark-text;
+    background-color: $dark-elevated;
+    border-color: $dark-border;
+  }
+
+  .btn-outline-secondary:hover,
+  .btn-light:hover {
+    background-color: rgba($primary-color, 0.15);
+    border-color: $primary-color;
+    color: $dark-text;
+  }
+
+  hr {
+    border-color: $dark-border;
+  }
+}
