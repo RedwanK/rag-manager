@@ -38,7 +38,6 @@ class ChatApiController extends AbstractController
 
         $messages = $this->conversationMessageRepository->findForConversation($conversation);
 
-        $docNodes = $this->documentService->mapDocumentNodes($messages[1]->getSourceDocuments());
 
         return $this->json(array_map(fn (ConversationMessage $message) => [
             'id' => $message->getId(),
@@ -46,7 +45,7 @@ class ChatApiController extends AbstractController
             'content' => $message->getContent(),
             'status' => $message->getStatus(),
             'error' => $message->getErrorMessage(),
-            'sourceDocuments' => $docNodes,
+            'sourceDocuments' => $this->documentService->mapDocumentNodes($message->getSourceDocuments()),
             'format' => 'markdown',
             'createdAt' => $message->getCreatedAt()->format(DATE_ATOM),
             'streamedAt' => $message->getStreamedAt()?->format(DATE_ATOM),
