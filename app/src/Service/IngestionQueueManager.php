@@ -12,6 +12,8 @@ use RuntimeException;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Filesystem\Path;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Component\HttpFoundation\HeaderUtils;
+use Symfony\Component\Mime\MimeTypes;
 
 /**
  * Manage ingestion queue creation and artifact download lifecycle.
@@ -68,6 +70,50 @@ class IngestionQueueManager
         $this->em->flush();
 
         return $queueItem;
+    }
+
+    /**
+     * Retrieve the raw content of a document from local storage (if present) or GitHub and return content, mimetype and disposition
+     */
+    public function fetchFile(DocumentNode $documentNode): array
+    {
+        if ($documentNode->getType() !== 'blob') {
+            throw new RuntimeException('Seuls les fichiers peuvent être téléchargés.');
+        }
+
+        $storagePath = $documentNode->getPath();
+        $basePath = Path::canonicalize($this->ragSharedDir);
+        $filename = pathinfo($storagePath, \PATHINFO_BASENAME);
+        $relativePath = Path::normalize($storagePath);
+        $absolutePath = Path::canonicalize(Path::join($basePath, $relativePath));
+        if ($storagePath) {
+            if (str_starts_with($absolutePath, $basePath) && is_file($absolutePath)) {
+                $content = @file_get_contents($absolutePath);
+                $disposition = HeaderUtils::makeDisposition(HeaderUtils::DISPOSITION_ATTACHMENT, $filename);
+                $mimeType = MimeTypes::getDefault()->guessMimeType($absolutePath) ?: 'application/octet-stream';
+                if ($content !== false) {
+                    return [
+                        'content' => $content,
+                        'mimeType' => $mimeType,
+                        'disposition' => $disposition
+                    ];
+                }
+            }
+        }
+
+        $content = $this->downloadFile($documentNode);
+
+        $this->filesystem->dumpFile($absolutePath, $content);
+
+        $disposition = HeaderUtils::makeDisposition(HeaderUtils::DISPOSITION_ATTACHMENT, $absolutePath);
+        $mimeType = MimeTypes::getDefault()->guessMimeType($absolutePath) ?: 'application/octet-stream';
+
+
+        return [
+            'content' => $content,
+            'mimeType' => $mimeType,
+            'disposition' => $disposition
+        ];
     }
 
     public function assertCanEnqueue(DocumentNode $documentNode): void

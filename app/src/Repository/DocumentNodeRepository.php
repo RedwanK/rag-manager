@@ -52,4 +52,17 @@ class DocumentNodeRepository extends ServiceEntityRepository
 
         return $docs;
     }
+
+    /**
+     * @param string name
+     * @return array
+     */
+    public function findOneByName(string $name): array 
+    {
+        $qb = $this->createQueryBuilder('d');
+        return $qb->where('d.path LIKE :name')
+            ->setParameter('name', '%'.$name.'%')
+            ->getQuery()
+            ->getArrayResult();
+    }
 }

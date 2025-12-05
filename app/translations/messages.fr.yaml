@@ -323,3 +323,45 @@ ingestion_queue_item:
   flash:
     updated: "Élément mis à jour"
     not_found: "Document introuvable."
+
+document_node:
+  title: "Document"
+  subtitle: "Détails du noeud et métadonnées d'ingestion."
+  actions:
+    back: "Retour à l'arbre"
+    download: "Télécharger"
+    view: "Voir le document"
+  sections:
+    document:
+      title: "Métadonnées du document"
+      subtitle: "Chemin, taille et synchronisation GitHub."
+    ingestion:
+      title: "Ingestion"
+      subtitle: "Statut et informations liées à la file d'ingestion."
+  labels:
+    path: "Chemin"
+    repository: "Dépôt"
+    type: "Type"
+    type_file: "Fichier"
+    type_directory: "Dossier"
+    size: "Taille"
+    last_modified: "Dernière modification"
+    last_synced: "Dernière synchro"
+    sync_status: "Statut de synchro"
+    created_at: "Créé le"
+    updated_at: "Mis à jour le"
+    not_available: "Non renseigné"
+    ingestion_source: "Source"
+    ingestion_added_by: "Ajouté par"
+    ingestion_started_at: "Début"
+    ingestion_ended_at: "Fin"
+    ingestion_storage_path: "Chemin de stockage"
+    ingestion_message: "Message"
+    no_ingestion: "Aucun élément d'ingestion lié."
+  sync_status:
+    success: "Succès"
+    synced: "Synchronisé"
+    running: "En cours"
+    failed: "Échec"
+  flash:
+    download_not_file: "Seuls les fichiers peuvent être téléchargés."

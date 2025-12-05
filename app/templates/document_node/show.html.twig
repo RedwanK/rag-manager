@@ -1,0 +1,132 @@
+{% extends 'layout/app.html.twig' %}
+
+{% block title %}{{ 'document_node.title'|trans }} - {{ document.path }}{% endblock %}
+
+{% block page_header %}
+    <div class="d-flex align-items-start justify-content-between flex-wrap gap-3 mb-4">
+        <div>
+            <p class="text-muted mb-1">{{ 'document_node.subtitle'|trans }}</p>
+            <h4 class="mb-0">{{ document.path }}</h4>
+            <div class="text-muted small">{{ document.repositoryConfig.repositorySlug }}</div>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a class="btn btn-outline-secondary d-flex align-items-center gap-2" href="{{ path('repository_tree') }}">
+                {{ ux_icon('bx:chevron-left') }}
+                <span>{{ 'document_node.actions.back'|trans }}</span>
+            </a>
+            {% if document.type == 'blob' %}
+                <a class="btn btn-primary d-flex align-items-center gap-2" href="{{ path('document_node_download', {id: document.id}) }}">
+                    {{ ux_icon('bx:download') }}
+                    <span>{{ 'document_node.actions.download'|trans }}</span>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block page_content %}
+    {% set sizeLabel = document.size is not null ? (document.size / 1024 / 1024)|number_format(2, ',', ' ') ~ ' Mo' : '—' %}
+    {% set typeLabel = document.type == 'tree' ? 'document_node.labels.type_directory'|trans : 'document_node.labels.type_file'|trans %}
+    {% set syncBadge = {
+        'success': 'success',
+        'synced': 'success',
+        'running': 'info',
+        'failed': 'danger'
+    }[document.lastSyncStatus ?? ''] ?? 'secondary' %}
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card h-100">
+                <div class="card-header pb-0">
+                    <h6 class="mb-1">{{ 'document_node.sections.document.title'|trans }}</h6>
+                    <p class="text-muted small mb-0">{{ 'document_node.sections.document.subtitle'|trans }}</p>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0 small">
+                        <dt class="col-sm-4 col-lg-3">{{ 'document_node.labels.path'|trans }}</dt>
+                        <dd class="col-sm-8 col-lg-9 font-monospace">{{ document.path }}</dd>
+
+                        <dt class="col-sm-4 col-lg-3">{{ 'document_node.labels.repository'|trans }}</dt>
+                        <dd class="col-sm-8 col-lg-9">{{ document.repositoryConfig.repositorySlug }}</dd>
+
+                        <dt class="col-sm-4 col-lg-3">{{ 'document_node.labels.type'|trans }}</dt>
+                        <dd class="col-sm-8 col-lg-9">{{ typeLabel }}</dd>
+
+                        <dt class="col-sm-4 col-lg-3">{{ 'document_node.labels.size'|trans }}</dt>
+                        <dd class="col-sm-8 col-lg-9">{{ sizeLabel }}</dd>
+
+                        <dt class="col-sm-4 col-lg-3">{{ 'document_node.labels.last_modified'|trans }}</dt>
+                        <dd class="col-sm-8 col-lg-9">
+                            {{ document.lastModified ? document.lastModified|date('Y-m-d H:i') : 'document_node.labels.not_available'|trans }}
+                        </dd>
+
+                        <dt class="col-sm-4 col-lg-3">{{ 'document_node.labels.last_synced'|trans }}</dt>
+                        <dd class="col-sm-8 col-lg-9">
+                            {{ document.lastSyncedAt ? document.lastSyncedAt|date('Y-m-d H:i') : 'document_node.labels.not_available'|trans }}
+                        </dd>
+
+                        <dt class="col-sm-4 col-lg-3">{{ 'document_node.labels.sync_status'|trans }}</dt>
+                        <dd class="col-sm-8 col-lg-9">
+                            {% if document.lastSyncStatus %}
+                                <span class="badge bg-label-{{ syncBadge }}">{{ ('document_node.sync_status.' ~ document.lastSyncStatus)|trans }}</span>
+                            {% else %}
+                                {{ 'document_node.labels.not_available'|trans }}
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-4 col-lg-3">{{ 'document_node.labels.created_at'|trans }}</dt>
+                        <dd class="col-sm-8 col-lg-9">{{ document.createdAt ? document.createdAt|date('Y-m-d H:i') : 'document_node.labels.not_available'|trans }}</dd>
+
+                        <dt class="col-sm-4 col-lg-3">{{ 'document_node.labels.updated_at'|trans }}</dt>
+                        <dd class="col-sm-8 col-lg-9">{{ document.updatedAt ? document.updatedAt|date('Y-m-d H:i') : 'document_node.labels.not_available'|trans }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card h-100">
+                <div class="card-header pb-0">
+                    <h6 class="mb-1">{{ 'document_node.sections.ingestion.title'|trans }}</h6>
+                    <p class="text-muted small mb-0">{{ 'document_node.sections.ingestion.subtitle'|trans }}</p>
+                </div>
+                <div class="card-body">
+                    {% if queueItem %}
+                        {% set statusBadge = {
+                            'queued': 'warning',
+                            'processing': 'info',
+                            'indexed': 'success',
+                            'failed': 'danger',
+                            'download_failed': 'danger'
+                        }[queueItem.status] ?? 'secondary' %}
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <span class="badge bg-label-{{ statusBadge }}">{{ ('ingestion.status.' ~ queueItem.status)|trans }}</span>
+                            <span class="text-muted small">{{ queueItem.createdAt ? queueItem.createdAt|date('Y-m-d H:i') : '' }}</span>
+                        </div>
+                        <dl class="row mb-0 small">
+                            <dt class="col-sm-5">{{ 'document_node.labels.ingestion_source'|trans }}</dt>
+                            <dd class="col-sm-7">{{ queueItem.source ? ('ingestion.source.' ~ queueItem.source)|trans : 'document_node.labels.not_available'|trans }}</dd>
+
+                            <dt class="col-sm-5">{{ 'document_node.labels.ingestion_added_by'|trans }}</dt>
+                            <dd class="col-sm-7">{{ queueItem.addedBy ? queueItem.addedBy.userIdentifier : 'document_node.labels.not_available'|trans }}</dd>
+
+                            <dt class="col-sm-5">{{ 'document_node.labels.ingestion_started_at'|trans }}</dt>
+                            <dd class="col-sm-7">{{ queueItem.startedAt ? queueItem.startedAt|date('Y-m-d H:i') : 'document_node.labels.not_available'|trans }}</dd>
+
+                            <dt class="col-sm-5">{{ 'document_node.labels.ingestion_ended_at'|trans }}</dt>
+                            <dd class="col-sm-7">{{ queueItem.endedAt ? queueItem.endedAt|date('Y-m-d H:i') : 'document_node.labels.not_available'|trans }}</dd>
+
+                            <dt class="col-sm-5">{{ 'document_node.labels.ingestion_storage_path'|trans }}</dt>
+                            <dd class="col-sm-7">{{ queueItem.storagePath ?? 'document_node.labels.not_available'|trans }}</dd>
+
+                            <dt class="col-sm-5">{{ 'document_node.labels.ingestion_message'|trans }}</dt>
+                            <dd class="col-sm-7">{{ queueItem.ragMessage ?: 'document_node.labels.not_available'|trans }}</dd>
+                        </dl>
+                    {% else %}
+                        <p class="text-muted mb-0">{{ 'document_node.labels.no_ingestion'|trans }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

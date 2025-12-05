@@ -8,6 +8,7 @@ use App\Exception\RateLimitExceededException;
 use App\Repository\ConversationMessageRepository;
 use App\Repository\ConversationRepository;
 use App\Service\ChatService;
+use App\Service\DocumentService;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -22,7 +23,8 @@ class ChatApiController extends AbstractController
     public function __construct(
         private readonly ConversationRepository $conversationRepository,
         private readonly ConversationMessageRepository $conversationMessageRepository,
-        private readonly ChatService $chatService
+        private readonly ChatService $chatService,
+        private readonly DocumentService $documentService
     ) {
     }
 
@@ -36,13 +38,15 @@ class ChatApiController extends AbstractController
 
         $messages = $this->conversationMessageRepository->findForConversation($conversation);
 
+        $docNodes = $this->documentService->mapDocumentNodes($messages[1]->getSourceDocuments());
+
         return $this->json(array_map(fn (ConversationMessage $message) => [
             'id' => $message->getId(),
             'role' => $message->getRole(),
             'content' => $message->getContent(),
             'status' => $message->getStatus(),
             'error' => $message->getErrorMessage(),
-            'sourceDocuments' => $message->getSourceDocuments(),
+            'sourceDocuments' => $docNodes,
             'format' => 'markdown',
             'createdAt' => $message->getCreatedAt()->format(DATE_ATOM),
             'streamedAt' => $message->getStreamedAt()?->format(DATE_ATOM),

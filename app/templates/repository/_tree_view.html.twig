@@ -2,6 +2,7 @@
      data-controller="repository-tree"
      data-repository-tree-tree-value='{{ treeData|json_encode|e('html_attr') }}'
      data-repository-tree-enqueue-url-template-value="{{ path('ingestion_queue_enqueue', {id: 'NODE_ID'}) }}"
+     data-repository-tree-document-url-template-value="{{ path('document_node_show', {id: 'NODE_ID'}) }}"
      data-repository-tree-filter-storage-key-value="repository-tree-filter"
      data-repository-tree-translations-value='{{ {
          enqueueLabel: 'ingestion.queue.actions.enqueue'|trans,
@@ -25,6 +26,7 @@
              size: 'repository.labels.size'|trans,
              lastSync: 'repository.labels.last_sync_at'|trans,
              ingestion: 'ingestion.queue.fields.status'|trans,
+             open: 'document_node.actions.view'|trans,
              never: 'repository.labels.never'|trans
          }
      }|json_encode|e('html_attr') }}'>
