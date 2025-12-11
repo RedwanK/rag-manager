@@ -8,6 +8,8 @@ use App\Entity\RepositoryConfig;
 use App\Entity\User;
 use App\Service\API\GitHubApiRouteResolver;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
+use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Filesystem\Path;
@@ -26,6 +28,7 @@ class IngestionQueueManager
         private readonly EntityManagerInterface $em,
         private readonly TokenCipher $cipher,
         private readonly Filesystem $filesystem,
+        private readonly LoggerInterface $logger,
         private readonly string $githubDefaultBranch,
         private readonly string $ragSharedDir,
         private readonly int $ingestionMaxFileSize,
@@ -164,7 +167,15 @@ class IngestionQueueManager
         ]);
 
         $data = $response->toArray();
-        $content = base64_decode($data['content'] ?? '', true);
+        $downloadUrl = $data['download_url'];
+
+        try {
+            $content = $this->client->request('GET', $downloadUrl);
+        } catch (Exception $e) {
+            $this->logger->error($e->getMessage());
+        }
+    
+        $content = $content->getContent();
 
         if ($content === false) {
             throw new RuntimeException('Impossible de récupérer le contenu du fichier sur GitHub.');
@@ -208,7 +219,7 @@ class IngestionQueueManager
     {
         return [
             'Authorization' => 'Bearer ' . $this->cipher->decrypt($config->getEncryptedToken()),
-            'Accept' => 'application/vnd.github+json',
+            'Accept' => 'application/vnd.github.object+json',
             'User-Agent' => 'rag-manager',
         ];
     }

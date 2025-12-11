@@ -62,26 +62,31 @@ class RepositoryTreeService
             'canEnqueue' => false,
         ];
 
+        // Track directories by their full path to avoid repeated scanning and reference loops
+        $directories = ['' => &$root];
 
         foreach ($nodes as $node) {
             // Split the stored "path" (like src/Controller/Foo.php) into hierarchical segments
             $segments = array_values(array_filter(explode('/', $node->getPath()), static fn ($segment) => $segment !== ''));
+            if ($segments === []) {
+                continue;
+            }
+
             $meta = $this->buildNodeMeta($node);
+            $segmentCount = count($segments);
+            $parentPath = '';
 
-            $cursor = &$root;
-            $currentPath = [];
-
-            foreach ($segments as $index => $segment) {
-                //dump($cursor);
-                $currentPath[] = $segment;
-                $isLeaf = $index === count($segments) - 1;
+            foreach ($segments as $position => $segment) {
+                $currentPath = ltrim($parentPath . '/' . $segment, '/');
+                $isLeaf = $position === $segmentCount - 1;
+                $parent = &$directories[$parentPath];
 
                 // Leaf node that is not a directory: add it as a child and move to next DocumentNode
                 if ($isLeaf && $node->getType() !== self::NODE_TYPE_DIRECTORY) {
-                    $cursor['children'][] = [
+                    $parent['children'][] = [
                         'name' => $segment,
                         'id' => $node->getId(),
-                        'path' => implode('/', $currentPath),
+                        'path' => $currentPath,
                         'type' => $node->getType(),
                         'size' => $node->getSize(),
                         'lastSyncedAt' => $node->getLastSyncedAt()?->format(\DATE_ATOM),
@@ -90,23 +95,15 @@ class RepositoryTreeService
                         'enqueueToken' => $meta['enqueueToken'],
                         'canEnqueue' => $meta['canEnqueue'],
                     ];
-                    continue;
+                    unset($parent);
+                    break;
                 }
 
-                $foundIndex = null;
-                foreach ($cursor['children'] as $index => $child) {
-                    if (($child['type'] ?? null) === self::NODE_TYPE_DIRECTORY && $child['name'] === $segment) {
-                        $foundIndex = $index;
-                        break;
-                    }
-                }
-
-                // If the directory level does not exist yet, create it; otherwise update its metadata for directory leaves
-                if ($foundIndex === null) {
-                    $cursor['children'][] = [
+                if (!isset($directories[$currentPath])) {
+                    $parent['children'][] = [
                         'name' => $segment,
                         'id' => $node->getType() === self::NODE_TYPE_DIRECTORY && $isLeaf ? $node->getId() : null,
-                        'path' => implode('/', $currentPath),
+                        'path' => $currentPath,
                         'type' => self::NODE_TYPE_DIRECTORY,
                         'children' => [],
                         'lastSyncedAt' => $node->getLastSyncedAt()?->format(\DATE_ATOM),
@@ -116,21 +113,22 @@ class RepositoryTreeService
                         'canEnqueue' => false,
                     ];
 
-                    $foundIndex = array_key_last($cursor["children"]);
+                    $directories[$currentPath] = &$parent['children'][array_key_last($parent["children"])];
                 } elseif ($isLeaf && $node->getType() === self::NODE_TYPE_DIRECTORY) {
-                    $cursor['children'][$foundIndex]['lastSyncedAt'] = $node->getLastSyncedAt()?->format(\DATE_ATOM);
-                    $cursor['children'][$foundIndex]['lastSyncStatus'] = $node->getLastSyncStatus();
-                    $cursor['children'][$foundIndex]['id'] = $node->getId();
+                    $directories[$currentPath]['lastSyncedAt'] = $node->getLastSyncedAt()?->format(\DATE_ATOM);
+                    $directories[$currentPath]['lastSyncStatus'] = $node->getLastSyncStatus();
+                    $directories[$currentPath]['id'] = $node->getId();
                 }
-                $cursor = &$cursor['children'][$foundIndex];
+
+                unset($parent);
+                $parentPath = $currentPath;
             }
-            unset($cursor);
 
         }
 
         return $root;
     }
-
+    
     /**
      * Prepare a flat representation of a node with ingestion metadata for listings.
      */
